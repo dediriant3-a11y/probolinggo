@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Real-time HSI Probolinggo</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes runBob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        .running-animation { animation: runBob 0.6s infinite ease-in-out; }
+
+        @keyframes flagWave {
+            0%, 100% { transform: rotate(0deg) skewY(0deg); }
+            25% { transform: rotate(-5deg) skewY(-4deg); }
+            75% { transform: rotate(5deg) skewY(4deg); }
+        }
+        .flag-wave {
+            transform-origin: bottom left;
+            animation: flagWave 1.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
+
+    <!-- Header -->
+    <header class="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-center border-b border-slate-700 pb-5 gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                <i class="fa-solid fa-chart-line mr-2"></i>Dashboard HSI Probolinggo
+            </h1>
+            <p class="text-slate-400 text-sm mt-1 flex items-center gap-2">
+                <span id="statusIndicator" class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                <span id="statusText">Menghubungkan ke Google Sheets...</span>
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="fetchDataFromSheet()" class="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-2 rounded-lg transition flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-rotate"></i> Refresh Manual
+            </button>
+            <a href="https://docs.google.com/spreadsheets/d/1ixpWhHd5Vhwu89hAIMZkeHOjmXrHhCGuRz-HRlvbo9M/edit?usp=sharing" 
+               target="_blank" 
+               class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-lg transition duration-200 shadow-lg flex items-center gap-2 text-sm">
+                <i class="fa-solid fa-file-excel"></i> Buka Spreadsheet
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto space-y-8">
+
+        <!-- ANIMASI PROGRES MENUJU BENDERA FINISH -->
+        <section class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-flag-checkered text-cyan-400"></i> Race to Finish Line (Progres Target DONE)
+                </h2>
+                <span id="progressPercentageText" class="text-2xl font-black text-cyan-400">0%</span>
+            </div>
+
+            <!-- Track -->
+            <div class="relative w-full bg-slate-900 rounded-xl h-28 border border-slate-700 p-3 flex items-center overflow-hidden">
+                <div class="absolute inset-x-0 bottom-4 border-b-2 border-dashed border-slate-600"></div>
+
+                <!-- Runner -->
+                <div id="runner" 
+                     class="absolute bottom-6 transition-all duration-1000 ease-out flex flex-col items-center"
+                     style="left: 2%;">
+                    <div class="bg-cyan-500 text-slate-900 font-bold text-xs px-2 py-0.5 rounded-full shadow-md mb-1 whitespace-nowrap">
+                        Team HSI
+                    </div>
+                    <div class="running-animation text-3xl text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]">
+                        <i class="fa-solid fa-person-running"></i>
+                    </div>
+                </div>
+
+                <!-- Finish Flag -->
+                <div class="absolute right-6 bottom-3 flex flex-col items-center justify-end h-20">
+                    <div class="flag-wave text-4xl text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] mb-1">
+                        <i class="fa-solid fa-flag-checkered"></i>
+                    </div>
+                    <div class="w-1.5 h-12 bg-gradient-to-t from-slate-400 to-slate-100 rounded-full shadow-md"></div>
+                </div>
+            </div>
+
+            <div class="mt-4 flex justify-between text-xs text-slate-400 font-medium">
+                <span>Start (0 Order DONE)</span>
+                <span id="progressSubtext">Memuat Data...</span>
+                <span>Finish Line (Target)</span>
+            </div>
+        </section>
+
+        <!-- CARDS METRIC -->
+        <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md">
+                <p class="text-slate-400 text-xs font-semibold uppercase">Total Order</p>
+                <p id="cardTotal" class="text-3xl font-extrabold text-white mt-1">-</p>
+            </div>
+            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-emerald-500">
+                <p class="text-slate-400 text-xs font-semibold uppercase">Done</p>
+                <p id="cardDone" class="text-3xl font-extrabold text-emerald-400 mt-1">-</p>
+            </div>
+            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-blue-500">
+                <p class="text-slate-400 text-xs font-semibold uppercase">OGP</p>
+                <p id="cardOGP" class="text-3xl font-extrabold text-blue-400 mt-1">-</p>
+            </div>
+            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-amber-500">
+                <p class="text-slate-400 text-xs font-semibold uppercase">JT</p>
+                <p id="cardJT" class="text-3xl font-extrabold text-amber-400 mt-1">-</p>
+            </div>
+            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-slate-500 col-span-2 md:col-span-1">
+                <p class="text-slate-400 text-xs font-semibold uppercase">Input Order</p>
+                <p id="cardInput" class="text-3xl font-extrabold text-slate-300 mt-1">-</p>
+            </div>
+        </section>
+
+        <!-- CHART & SUMMARY -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-lg flex flex-col justify-between">
+                <h3 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-cyan-400"></i> Distribusi Status Delivery
+                </h3>
+                <div class="relative h-64 flex justify-center items-center">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-lg flex flex-col justify-between">
+                <h3 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-cyan-400"></i> Informasi Layanan
+                </h3>
+                <div class="space-y-4 my-auto">
+                    <div>
+                        <div class="flex justify-between text-sm font-semibold mb-1">
+                            <span class="text-slate-300">HSI (High Speed Internet)</span>
+                            <span id="hsiCount" class="text-cyan-400">- Order</span>
+                        </div>
+                        <div class="w-full bg-slate-700 h-3 rounded-full overflow-hidden">
+                            <div id="hsiBar" class="bg-cyan-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm font-semibold mb-1">
+                            <span class="text-slate-300">IP TRANSIT</span>
+                            <span id="ipTransitCount" class="text-emerald-400">- Order</span>
+                        </div>
+                        <div class="w-full bg-slate-700 h-3 rounded-full overflow-hidden">
+                            <div id="ipTransitBar" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-700/50 mt-4">
+                    <p class="text-xs text-slate-400 leading-relaxed" id="lastUpdated">
+                        <i class="fa-solid fa-clock text-cyan-400 mr-1"></i> Memuat waktu sinkronisasi...
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const sheetId = '1ixpWhHd5Vhwu89hAIMZkeHOjmXrHhCGuRz-HRlvbo9M';
+        let myChart = null;
+
+        function initChart(done, ogp, jt, input) {
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            if (myChart) myChart.destroy();
+
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['DONE', 'OGP', 'JT', 'INPUT ORDER'],
+                    datasets: [{
+                        data: [done, ogp, jt, input],
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#64748b'],
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // Callback Global untuk Google Query (Bypass CORS)
+        window.handleSheetData = function(response) {
+            if (!response || response.isError()) {
+                console.error("Error loading data from Google Sheets");
+                document.getElementById('statusText').innerText = "Gagal mengambil data dari Google Sheets";
+                return;
+            }
+
+            const dataTable = response.getDataTable();
+            const numRows = dataTable.getNumberOfRows();
+
+            let total = 0;
+            let done = 0, ogp = 0, jt = 0, input = 0;
+            let hsi = 0, ipTransit = 0;
+
+            for (let r = 0; r < numRows; r++) {
+                // Kolom C (Index 2): LAYANAN, Kolom F (Index 5): STATUS DELIVERY
+                const layanan = (dataTable.getValue(r, 2) || '').toString().trim().toUpperCase();
+                const status = (dataTable.getValue(r, 5) || '').toString().trim().toUpperCase();
+
+                if (status) {
+                    total++;
+                    if (status.includes('DONE')) done++;
+                    else if (status.includes('OGP')) ogp++;
+                    else if (status.includes('JT')) jt++;
+                    else if (status.includes('INPUT')) input++;
+                }
+
+                if (layanan.includes('HSI')) hsi++;
+                else if (layanan.includes('IP TRANSIT')) ipTransit++;
+            }
+
+            // Update UI
+            document.getElementById('cardTotal').innerText = total;
+            document.getElementById('cardDone').innerText = done;
+            document.getElementById('cardOGP').innerText = ogp;
+            document.getElementById('cardJT').innerText = jt;
+            document.getElementById('cardInput').innerText = input;
+
+            document.getElementById('hsiCount').innerText = `${hsi} Order`;
+            document.getElementById('ipTransitCount').innerText = `${ipTransit} Order`;
+            document.getElementById('hsiBar').style.width = total ? `${(hsi / total) * 100}%` : '0%';
+            document.getElementById('ipTransitBar').style.width = total ? `${(ipTransit / total) * 100}%` : '0%';
+
+            // Animasi Runner
+            const percentage = total ? ((done / total) * 100).toFixed(1) : 0;
+            const maxPositionPercent = 88;
+            const targetLeft = Math.max(2, Math.min(maxPositionPercent, (percentage / 100) * maxPositionPercent));
+
+            document.getElementById('runner').style.left = `${targetLeft}%`;
+            document.getElementById('progressPercentageText').innerText = `${percentage}%`;
+            document.getElementById('progressSubtext').innerText = `${done} dari ${total} Total Order Selesai`;
+
+            // Chart & Status Marker
+            initChart(done, ogp, jt, input);
+
+            document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+            document.getElementById('statusText').innerText = "Real-time Live Sync dari Google Sheets";
+
+            const now = new Date();
+            document.getElementById('lastUpdated').innerHTML = `<i class="fa-solid fa-clock text-cyan-400 mr-1"></i> Terakhir Diperbarui: ${now.toLocaleTimeString('id-ID')} WIB`;
+        };
+
+        function fetchDataFromSheet() {
+            // Gunakan Script Injection (JSONP) agar lolos CORS browser file:///
+            const existingScript = document.getElementById('gscript');
+            if (existingScript) existingScript.remove();
+
+            const script = document.createElement('script');
+            script.id = 'gscript';
+            script.src = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=responseHandler:handleSheetData&sheet=Sheet1&_=${new Date().getTime()}`;
+            document.body.appendChild(script);
+        }
+
+        window.addEventListener('load', () => {
+            fetchDataFromSheet();
+            setInterval(fetchDataFromSheet, 30000); // Sinkronisasi otomatis setiap 30 detik
+        });
+    </script>
+</body>
+</html>
