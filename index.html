@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PapaParse CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -166,7 +168,8 @@
     </main>
 
     <script>
-        const sheetId = '1ixpWhHd5Vhwu89hAIMZkeHOjmXrHhCGuRz-HRlvbo9M';
+        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTrV7eelhQ0JC46_w5SI9Z-c4dPIEQ2igYEieWNVhZTQT_etrxoXvcEbHEUNEO6pauenoON8CsXwTRf/pub?output=csv';
+
         let myChart = null;
 
         function initChart(done, ogp, jt, input) {
@@ -195,39 +198,39 @@
             });
         }
 
-        // Callback Global untuk Google Query (Bypass CORS)
-        window.handleSheetData = function(response) {
-            if (!response || response.isError()) {
-                console.error("Error loading data from Google Sheets");
-                document.getElementById('statusText').innerText = "Gagal mengambil data dari Google Sheets";
-                return;
-            }
-
-            const dataTable = response.getDataTable();
-            const numRows = dataTable.getNumberOfRows();
-
+        function processRows(rows) {
             let total = 0;
             let done = 0, ogp = 0, jt = 0, input = 0;
             let hsi = 0, ipTransit = 0;
 
-            for (let r = 0; r < numRows; r++) {
-                // Kolom C (Index 2): LAYANAN, Kolom F (Index 5): STATUS DELIVERY
-                const layanan = (dataTable.getValue(r, 2) || '').toString().trim().toUpperCase();
-                const status = (dataTable.getValue(r, 5) || '').toString().trim().toUpperCase();
+            rows.forEach(row => {
+                // Konversi key dan value ke uppercase & trim untuk menghindari isu karakter tersembunyi
+                let statusVal = '';
+                let layananVal = '';
 
-                if (status) {
+                Object.keys(row).forEach(key => {
+                    const cleanKey = key.trim().toUpperCase();
+                    if (cleanKey.includes('STATUS')) {
+                        statusVal = (row[key] || '').toString().trim().toUpperCase();
+                    }
+                    if (cleanKey.includes('LAYANAN')) {
+                        layananVal = (row[key] || '').toString().trim().toUpperCase();
+                    }
+                });
+
+                if (statusVal) {
                     total++;
-                    if (status.includes('DONE')) done++;
-                    else if (status.includes('OGP')) ogp++;
-                    else if (status.includes('JT')) jt++;
-                    else if (status.includes('INPUT')) input++;
+                    if (statusVal.includes('DONE')) done++;
+                    else if (statusVal.includes('OGP')) ogp++;
+                    else if (statusVal.includes('JT')) jt++;
+                    else if (statusVal.includes('INPUT')) input++;
                 }
 
-                if (layanan.includes('HSI')) hsi++;
-                else if (layanan.includes('IP TRANSIT')) ipTransit++;
-            }
+                if (layananVal.includes('HSI')) hsi++;
+                else if (layananVal.includes('IP TRANSIT')) ipTransit++;
+            });
 
-            // Update UI
+            // Update UI Metrics
             document.getElementById('cardTotal').innerText = total;
             document.getElementById('cardDone').innerText = done;
             document.getElementById('cardOGP').innerText = ogp;
@@ -239,7 +242,7 @@
             document.getElementById('hsiBar').style.width = total ? `${(hsi / total) * 100}%` : '0%';
             document.getElementById('ipTransitBar').style.width = total ? `${(ipTransit / total) * 100}%` : '0%';
 
-            // Animasi Runner
+            // Update Animasi Pelari
             const percentage = total ? ((done / total) * 100).toFixed(1) : 0;
             const maxPositionPercent = 88;
             const targetLeft = Math.max(2, Math.min(maxPositionPercent, (percentage / 100) * maxPositionPercent));
@@ -248,7 +251,7 @@
             document.getElementById('progressPercentageText').innerText = `${percentage}%`;
             document.getElementById('progressSubtext').innerText = `${done} dari ${total} Total Order Selesai`;
 
-            // Chart & Status Marker
+            // Chart & Status
             initChart(done, ogp, jt, input);
 
             document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
@@ -256,22 +259,29 @@
 
             const now = new Date();
             document.getElementById('lastUpdated').innerHTML = `<i class="fa-solid fa-clock text-cyan-400 mr-1"></i> Terakhir Diperbarui: ${now.toLocaleTimeString('id-ID')} WIB`;
-        };
+        }
 
         function fetchDataFromSheet() {
-            // Gunakan Script Injection (JSONP) agar lolos CORS browser file:///
-            const existingScript = document.getElementById('gscript');
-            if (existingScript) existingScript.remove();
-
-            const script = document.createElement('script');
-            script.id = 'gscript';
-            script.src = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=responseHandler:handleSheetData&sheet=Sheet1&_=${new Date().getTime()}`;
-            document.body.appendChild(script);
+            Papa.parse(csvUrl, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    if (results && results.data && results.data.length > 0) {
+                        processRows(results.data);
+                    }
+                },
+                error: function(err) {
+                    console.error("Gagal menarik CSV:", err);
+                    document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-red-500";
+                    document.getElementById('statusText').innerText = "Koneksi ke Google Sheets Gagal";
+                }
+            });
         }
 
         window.addEventListener('load', () => {
             fetchDataFromSheet();
-            setInterval(fetchDataFromSheet, 30000); // Sinkronisasi otomatis setiap 30 detik
+            setInterval(fetchDataFromSheet, 30000); // Auto refresh tiap 30 detik
         });
     </script>
 </body>
