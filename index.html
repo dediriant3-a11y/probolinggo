@@ -26,16 +26,11 @@
             transform-origin: bottom left;
             animation: flagWave 1.5s infinite ease-in-out;
         }
-
-        @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.6); }
-        }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
 
-    <!-- Header dengan Logo Telkom Repository GitHub -->
+    <!-- Header dengan Logo Telkom -->
     <header class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center border-b border-slate-700 pb-5 gap-4">
         <div class="flex items-center gap-4">
             <div class="bg-white px-3 py-2 rounded-xl shadow-md border border-slate-700 flex items-center justify-center">
@@ -68,7 +63,7 @@
 
     <main class="max-w-7xl mx-auto space-y-6">
 
-        <!-- BANNER HITUNG MUNDUR / COUNTDOWN TIMER -->
+        <!-- BANNER HITUNG MUNDUR -->
         <section class="bg-slate-800/90 border border-amber-500/30 rounded-2xl p-5 shadow-xl relative overflow-hidden backdrop-blur-sm">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-3">
@@ -114,7 +109,7 @@
             </div>
         </section>
 
-        <!-- ANIMASI PROGRES MENUJU BENDERA FINISH -->
+        <!-- ANIMASI PROGRES RUNNER -->
         <section class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-slate-200 flex items-center gap-2">
@@ -123,11 +118,9 @@
                 <span id="progressPercentageText" class="text-2xl font-black text-cyan-400">0%</span>
             </div>
 
-            <!-- Track -->
             <div class="relative w-full bg-slate-900 rounded-xl h-28 border border-slate-700 p-3 flex items-center overflow-hidden">
                 <div class="absolute inset-x-0 bottom-4 border-b-2 border-dashed border-slate-600"></div>
 
-                <!-- Runner -->
                 <div id="runner" 
                      class="absolute bottom-6 transition-all duration-1000 ease-out flex flex-col items-center"
                      style="left: 2%;">
@@ -139,7 +132,6 @@
                     </div>
                 </div>
 
-                <!-- Finish Flag -->
                 <div class="absolute right-6 bottom-3 flex flex-col items-center justify-end h-20">
                     <div class="flag-wave text-4xl text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] mb-1">
                         <i class="fa-solid fa-flag-checkered"></i>
@@ -155,7 +147,7 @@
             </div>
         </section>
 
-        <!-- CARDS METRIC (URUTAN: TOTAL ORDER - INPUT ORDER - JT - OGP - DONE) -->
+        <!-- CARDS METRIC -->
         <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md">
                 <p class="text-slate-400 text-xs font-semibold uppercase">Total Order</p>
@@ -225,7 +217,9 @@
     </main>
 
     <script>
-        const sheetId = '1ixpWhHd5Vhwu89hAIMZkeHOjmXrHhCGuRz-HRlvbo9M';
+        // URL GOOGLE APPS SCRIPT WEB APP
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycbx6FSNsqr-DlLtJtUHqlFkzAgll1K0hIdQn1KaOOZvGfSXp-sfePcOiATpj2rfFINkG/exec';
+
         let myChart = null;
 
         // --- TIMER LOGIC ---
@@ -302,89 +296,87 @@
             });
         }
 
-        // --- DIRECT GOOGLE SHEET GVIZ API (BYPASS CDN CACHE 100%) ---
-        window.handleDirectSheetData = function(response) {
-            if (!response || response.isError()) {
-                console.error("Gagal menarik data langsung dari Google Sheets");
+        // --- FETCH REAL-TIME DIRECT MEMORY DATA ---
+        async function fetchDataFromSheet() {
+            try {
+                // Fetch direct via Apps Script API
+                const response = await fetch(webAppUrl + '?_t=' + new Date().getTime());
+                const rows = await response.json();
+
+                if (!rows || rows.length <= 1) return;
+
+                // Identifikasi Indeks Kolom dari Header (Baris 0)
+                const header = rows[0].map(h => (h || '').toString().trim().toUpperCase());
+                const colNo = header.findIndex(h => h === 'NO' || h === 'NO.');
+                const colLayanan = header.findIndex(h => h.includes('LAYANAN'));
+                const colStatus = header.findIndex(h => h.includes('STATUS'));
+
+                let total = 0;
+                let done = 0, ogp = 0, jt = 0, input = 0;
+                let hsi = 0, ipTransit = 0;
+
+                // Proses Baris Data (Mulai Baris 1)
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    const noVal = colNo !== -1 ? row[colNo] : row[0];
+                    const layananVal = (colLayanan !== -1 ? row[colLayanan] : row[2] || '').toString().trim().toUpperCase();
+                    const statusVal = (colStatus !== -1 ? row[colStatus] : row[5] || '').toString().trim().toUpperCase();
+
+                    // Validasi hanya menghitung baris ber-Nomor urut
+                    if (noVal !== null && noVal !== '' && !isNaN(parseInt(noVal))) {
+                        total++;
+
+                        if (statusVal.includes('DONE')) done++;
+                        else if (statusVal.includes('OGP')) ogp++;
+                        else if (statusVal.includes('JT')) jt++;
+                        else input++;
+
+                        if (layananVal.includes('IP TRANSIT')) ipTransit++;
+                        else hsi++;
+                    }
+                }
+
+                // Update UI Metrics
+                document.getElementById('cardTotal').innerText = total;
+                document.getElementById('cardInput').innerText = input;
+                document.getElementById('cardJT').innerText = jt;
+                document.getElementById('cardOGP').innerText = ogp;
+                document.getElementById('cardDone').innerText = done;
+
+                document.getElementById('hsiCount').innerText = `${hsi} Order`;
+                document.getElementById('ipTransitCount').innerText = `${ipTransit} Order`;
+                document.getElementById('hsiBar').style.width = total ? `${(hsi / total) * 100}%` : '0%';
+                document.getElementById('ipTransitBar').style.width = total ? `${(ipTransit / total) * 100}%` : '0%';
+
+                // Update Runner Animation
+                const percentage = total ? ((done / total) * 100).toFixed(1) : 0;
+                const maxPositionPercent = 88;
+                const targetLeft = Math.max(2, Math.min(maxPositionPercent, (percentage / 100) * maxPositionPercent));
+
+                document.getElementById('runner').style.left = `${targetLeft}%`;
+                document.getElementById('progressPercentageText').innerText = `${percentage}%`;
+                document.getElementById('progressSubtext').innerText = `${done} dari ${total} Total Order Selesai`;
+
+                // Render Chart
+                initChart(done, ogp, jt, input);
+
+                document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+                document.getElementById('statusText').innerText = "Real-time Live Sync (Direct Apps Script)";
+
+                const now = new Date();
+                document.getElementById('lastUpdated').innerHTML = `<i class="fa-solid fa-clock text-cyan-400 mr-1"></i> Terakhir Diperbarui: ${now.toLocaleTimeString('id-ID')} WIB`;
+
+            } catch (err) {
+                console.error("Gagal menarik data via Web App:", err);
                 document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-red-500";
                 document.getElementById('statusText').innerText = "Koneksi Google Sheets Gagal";
-                return;
             }
-
-            const dataTable = response.getDataTable();
-            const numRows = dataTable.getNumberOfRows();
-
-            let total = 0;
-            let done = 0, ogp = 0, jt = 0, input = 0;
-            let hsi = 0, ipTransit = 0;
-
-            for (let r = 0; r < numRows; r++) {
-                // Kolom A (0): NO, Kolom C (2): LAYANAN, Kolom F (5): STATUS DELIVERY
-                const noVal = dataTable.getValue(r, 0);
-                const layananVal = (dataTable.getValue(r, 2) || '').toString().trim().toUpperCase();
-                const statusVal = (dataTable.getValue(r, 5) || '').toString().trim().toUpperCase();
-
-                // Validasi hanya menghitung baris yang memiliki nomor urut valid (mencegah kalkulasi baris kosong)
-                if (noVal !== null && noVal !== '' && !isNaN(parseInt(noVal))) {
-                    total++;
-
-                    if (statusVal.includes('DONE')) done++;
-                    else if (statusVal.includes('OGP')) ogp++;
-                    else if (statusVal.includes('JT')) jt++;
-                    else input++; // Default sisanya terhitung Input Order
-
-                    if (layananVal.includes('IP TRANSIT')) ipTransit++;
-                    else hsi++;
-                }
-            }
-
-            // Update UI Metrics
-            document.getElementById('cardTotal').innerText = total;
-            document.getElementById('cardInput').innerText = input;
-            document.getElementById('cardJT').innerText = jt;
-            document.getElementById('cardOGP').innerText = ogp;
-            document.getElementById('cardDone').innerText = done;
-
-            document.getElementById('hsiCount').innerText = `${hsi} Order`;
-            document.getElementById('ipTransitCount').innerText = `${ipTransit} Order`;
-            document.getElementById('hsiBar').style.width = total ? `${(hsi / total) * 100}%` : '0%';
-            document.getElementById('ipTransitBar').style.width = total ? `${(ipTransit / total) * 100}%` : '0%';
-
-            // Update Animasi Runner
-            const percentage = total ? ((done / total) * 100).toFixed(1) : 0;
-            const maxPositionPercent = 88;
-            const targetLeft = Math.max(2, Math.min(maxPositionPercent, (percentage / 100) * maxPositionPercent));
-
-            document.getElementById('runner').style.left = `${targetLeft}%`;
-            document.getElementById('progressPercentageText').innerText = `${percentage}%`;
-            document.getElementById('progressSubtext').innerText = `${done} dari ${total} Total Order Selesai`;
-
-            // Render Chart
-            initChart(done, ogp, jt, input);
-
-            document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
-            document.getElementById('statusText').innerText = "Real-time Live Sync (Direct No-Cache)";
-
-            const now = new Date();
-            document.getElementById('lastUpdated').innerHTML = `<i class="fa-solid fa-clock text-cyan-400 mr-1"></i> Terakhir Diperbarui: ${now.toLocaleTimeString('id-ID')} WIB`;
-        };
-
-        function fetchDataFromSheet() {
-            // Hapus script lama jika ada
-            const oldScript = document.getElementById('gviz_script');
-            if (oldScript) oldScript.remove();
-
-            // Injeksi Script JSONP dengan parameter unik timestamp untuk memaksa Google Sheet memberikan data paling baru
-            const script = document.createElement('script');
-            script.id = 'gviz_script';
-            script.src = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=responseHandler:handleDirectSheetData&sheet=Sheet1&_t=${new Date().getTime()}`;
-            document.body.appendChild(script);
         }
 
         window.addEventListener('load', () => {
             updateTimer();
             fetchDataFromSheet();
-            setInterval(fetchDataFromSheet, 15000); // Auto-refresh setiap 15 detik
+            setInterval(fetchDataFromSheet, 10000); // Auto-refresh setiap 10 detik
         });
     </script>
 </body>
