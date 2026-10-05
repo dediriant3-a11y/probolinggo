@@ -8,8 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- PapaParse CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -32,9 +30,6 @@
         @keyframes pulseGlow {
             0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
             50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.6); }
-        }
-        .timer-warning {
-            animation: pulseGlow 1.5s infinite ease-in-out;
         }
     </style>
 </head>
@@ -104,7 +99,6 @@
                         <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Detik</p>
                     </div>
 
-                    <!-- Tombol Set Deadline -->
                     <button onclick="changeDeadline()" class="ml-2 bg-slate-700/80 hover:bg-slate-600 text-slate-300 hover:text-white p-2.5 rounded-xl transition text-xs flex items-center gap-1" title="Ubah Batas Waktu">
                         <i class="fa-solid fa-pen-to-square"></i>
                     </button>
@@ -130,7 +124,7 @@
                      class="absolute bottom-6 transition-all duration-1000 ease-out flex flex-col items-center"
                      style="left: 2%;">
                     <div class="bg-cyan-500 text-slate-900 font-bold text-xs px-2 py-0.5 rounded-full shadow-md mb-1 whitespace-nowrap">
-                        Telkom Probilinggo
+                        Telkom Probolinggo
                     </div>
                     <div class="running-animation text-3xl text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]">
                         <i class="fa-solid fa-person-running"></i>
@@ -155,27 +149,22 @@
 
         <!-- CARDS METRIC (URUTAN: TOTAL ORDER - INPUT ORDER - JT - OGP - DONE) -->
         <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <!-- 1. Total Order -->
             <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md">
                 <p class="text-slate-400 text-xs font-semibold uppercase">Total Order</p>
                 <p id="cardTotal" class="text-3xl font-extrabold text-white mt-1">-</p>
             </div>
-            <!-- 2. Input Order -->
             <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-slate-500">
                 <p class="text-slate-400 text-xs font-semibold uppercase">Input Order</p>
                 <p id="cardInput" class="text-3xl font-extrabold text-slate-300 mt-1">-</p>
             </div>
-            <!-- 3. JT -->
             <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-amber-500">
                 <p class="text-slate-400 text-xs font-semibold uppercase">JT</p>
                 <p id="cardJT" class="text-3xl font-extrabold text-amber-400 mt-1">-</p>
             </div>
-            <!-- 4. OGP -->
             <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-blue-500">
                 <p class="text-slate-400 text-xs font-semibold uppercase">OGP</p>
                 <p id="cardOGP" class="text-3xl font-extrabold text-blue-400 mt-1">-</p>
             </div>
-            <!-- 5. Done -->
             <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-emerald-500 col-span-2 md:col-span-1">
                 <p class="text-slate-400 text-xs font-semibold uppercase">Done</p>
                 <p id="cardDone" class="text-3xl font-extrabold text-emerald-400 mt-1">-</p>
@@ -228,11 +217,10 @@
     </main>
 
     <script>
-        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTrV7eelhQ0JC46_w5SI9Z-c4dPIEQ2igYEieWNVhZTQT_etrxoXvcEbHEUNEO6pauenoON8CsXwTRf/pub?output=csv';
-
+        const sheetId = '1ixpWhHd5Vhwu89hAIMZkeHOjmXrHhCGuRz-HRlvbo9M';
         let myChart = null;
 
-        // --- LOGIK COUNTDOWN TIMER ---
+        // --- TIMER LOGIC ---
         let targetDeadline = localStorage.getItem('hsi_deadline') 
             ? new Date(localStorage.getItem('hsi_deadline')) 
             : new Date('2026-10-31T23:59:59');
@@ -277,10 +265,9 @@
                 }
             }
         }
-
         setInterval(updateTimer, 1000);
 
-        // --- LOGIK CHART & SHEET ---
+        // --- CHART & DATA LOGIC ---
         function initChart(done, ogp, jt, input) {
             const ctx = document.getElementById('statusChart').getContext('2d');
             if (myChart) myChart.destroy();
@@ -307,90 +294,86 @@
             });
         }
 
-        function processRows(rows) {
-            let total = 0;
-            let done = 0, ogp = 0, jt = 0, input = 0;
-            let hsi = 0, ipTransit = 0;
-
-            rows.forEach(row => {
-                let statusVal = '';
-                let layananVal = '';
-
-                Object.keys(row).forEach(key => {
-                    const cleanKey = key.trim().toUpperCase();
-                    if (cleanKey.includes('STATUS')) {
-                        statusVal = (row[key] || '').toString().trim().toUpperCase();
-                    }
-                    if (cleanKey.includes('LAYANAN')) {
-                        layananVal = (row[key] || '').toString().trim().toUpperCase();
-                    }
-                });
-
-                if (statusVal) {
-                    total++;
-                    if (statusVal.includes('DONE')) done++;
-                    else if (statusVal.includes('OGP')) ogp++;
-                    else if (statusVal.includes('JT')) jt++;
-                    else if (statusVal.includes('INPUT')) input++;
-                }
-
-                if (layananVal.includes('HSI')) hsi++;
-                else if (layananVal.includes('IP TRANSIT')) ipTransit++;
-            });
-
-            // Update UI Metrics
-            document.getElementById('cardTotal').innerText = total;
-            document.getElementById('cardInput').innerText = input;
-            document.getElementById('cardJT').innerText = jt;
-            document.getElementById('cardOGP').innerText = ogp;
-            document.getElementById('cardDone').innerText = done;
-
-            document.getElementById('hsiCount').innerText = `${hsi} Order`;
-            document.getElementById('ipTransitCount').innerText = `${ipTransit} Order`;
-            document.getElementById('hsiBar').style.width = total ? `${(hsi / total) * 100}%` : '0%';
-            document.getElementById('ipTransitBar').style.width = total ? `${(ipTransit / total) * 100}%` : '0%';
-
-            // Update Animasi Pelari
-            const percentage = total ? ((done / total) * 100).toFixed(1) : 0;
-            const maxPositionPercent = 88;
-            const targetLeft = Math.max(2, Math.min(maxPositionPercent, (percentage / 100) * maxPositionPercent));
-
-            document.getElementById('runner').style.left = `${targetLeft}%`;
-            document.getElementById('progressPercentageText').innerText = `${percentage}%`;
-            document.getElementById('progressSubtext').innerText = `${done} dari ${total} Total Order Selesai`;
-
-            // Chart & Status
-            initChart(done, ogp, jt, input);
-
-            document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
-            document.getElementById('statusText').innerText = "Real-time Live Sync dari Google Sheets";
-
-            const now = new Date();
-            document.getElementById('lastUpdated').innerHTML = `<i class="fa-solid fa-clock text-cyan-400 mr-1"></i> Terakhir Diperbarui: ${now.toLocaleTimeString('id-ID')} WIB`;
-        }
-
+        // Direct Google Sheets API Response Handler (Anti-Cache)
         function fetchDataFromSheet() {
-            Papa.parse(csvUrl, {
-                download: true,
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    if (results && results.data && results.data.length > 0) {
-                        processRows(results.data);
-                    }
-                },
-                error: function(err) {
-                    console.error("Gagal menarik CSV:", err);
+            document.getElementById('statusText').innerText = "Memperbarui data live...";
+
+            // Buka koneksi Google GViz Query dengan timestamp unik untuk mematikan cache
+            const timestamp = new Date().getTime();
+            const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq=&_nocache=${timestamp}`;
+
+            fetch(gvizUrl, { cache: 'no-store' })
+                .then(response => response.text())
+                .then(dataText => {
+                    // Membersihkan format pembungkus JSON Google GViz
+                    const jsonString = dataText.substring(dataText.indexOf('{'), dataText.lastIndexOf('}') + 1);
+                    const json = JSON.parse(jsonString);
+
+                    const rows = json.table.rows;
+                    let total = 0;
+                    let done = 0, ogp = 0, jt = 0, input = 0;
+                    let hsi = 0, ipTransit = 0;
+
+                    rows.forEach(r => {
+                        const c = r.c;
+                        if (!c) return;
+
+                        // Kolom C (Index 2) = LAYANAN, Kolom F (Index 5) = STATUS DELIVERY
+                        const layanan = (c[2] && c[2].v) ? String(c[2].v).trim().toUpperCase() : '';
+                        const status = (c[5] && c[5].v) ? String(c[5].v).trim().toUpperCase() : '';
+
+                        if (status) {
+                            total++;
+                            if (status.includes('DONE')) done++;
+                            else if (status.includes('OGP')) ogp++;
+                            else if (status.includes('JT')) jt++;
+                            else if (status.includes('INPUT')) input++;
+                        }
+
+                        if (layanan.includes('HSI')) hsi++;
+                        else if (layanan.includes('IP TRANSIT')) ipTransit++;
+                    });
+
+                    // Update UI Metrics
+                    document.getElementById('cardTotal').innerText = total;
+                    document.getElementById('cardInput').innerText = input;
+                    document.getElementById('cardJT').innerText = jt;
+                    document.getElementById('cardOGP').innerText = ogp;
+                    document.getElementById('cardDone').innerText = done;
+
+                    document.getElementById('hsiCount').innerText = `${hsi} Order`;
+                    document.getElementById('ipTransitCount').innerText = `${ipTransit} Order`;
+                    document.getElementById('hsiBar').style.width = total ? `${(hsi / total) * 100}%` : '0%';
+                    document.getElementById('ipTransitBar').style.width = total ? `${(ipTransit / total) * 100}%` : '0%';
+
+                    // Update Runner Position
+                    const percentage = total ? ((done / total) * 100).toFixed(1) : 0;
+                    const maxPositionPercent = 88;
+                    const targetLeft = Math.max(2, Math.min(maxPositionPercent, (percentage / 100) * maxPositionPercent));
+
+                    document.getElementById('runner').style.left = `${targetLeft}%`;
+                    document.getElementById('progressPercentageText').innerText = `${percentage}%`;
+                    document.getElementById('progressSubtext').innerText = `${done} dari ${total} Total Order Selesai`;
+
+                    initChart(done, ogp, jt, input);
+
+                    document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+                    document.getElementById('statusText').innerText = "Real-time Live Sync (Anti-Cache)";
+
+                    const now = new Date();
+                    document.getElementById('lastUpdated').innerHTML = `<i class="fa-solid fa-clock text-cyan-400 mr-1"></i> Terakhir Diperbarui: ${now.toLocaleTimeString('id-ID')} WIB`;
+                })
+                .catch(err => {
+                    console.error("Gagal menarik data:", err);
                     document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-red-500";
                     document.getElementById('statusText').innerText = "Koneksi ke Google Sheets Gagal";
-                }
-            });
+                });
         }
 
         window.addEventListener('load', () => {
             updateTimer();
             fetchDataFromSheet();
-            setInterval(fetchDataFromSheet, 30000);
+            setInterval(fetchDataFromSheet, 15000); // Auto-refresh setiap 15 detik
         });
     </script>
 </body>
