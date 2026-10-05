@@ -8,8 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- PapaParse CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -227,8 +225,7 @@
     </main>
 
     <script>
-        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTrV7eelhQ0JC46_w5SI9Z-c4dPIEQ2igYEieWNVhZTQT_etrxoXvcEbHEUNEO6pauenoON8CsXwTRf/pub?output=csv';
-
+        const sheetId = '1ixpWhHd5Vhwu89hAIMZkeHOjmXrHhCGuRz-HRlvbo9M';
         let myChart = null;
 
         // --- TIMER LOGIC ---
@@ -305,31 +302,30 @@
             });
         }
 
-        function processRows(rows) {
+        // --- DIRECT GOOGLE SHEET GVIZ API (BYPASS CDN CACHE 100%) ---
+        window.handleDirectSheetData = function(response) {
+            if (!response || response.isError()) {
+                console.error("Gagal menarik data langsung dari Google Sheets");
+                document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-red-500";
+                document.getElementById('statusText').innerText = "Koneksi Google Sheets Gagal";
+                return;
+            }
+
+            const dataTable = response.getDataTable();
+            const numRows = dataTable.getNumberOfRows();
+
             let total = 0;
             let done = 0, ogp = 0, jt = 0, input = 0;
             let hsi = 0, ipTransit = 0;
 
-            rows.forEach(row => {
-                let noVal = '';
-                let statusVal = '';
-                let layananVal = '';
+            for (let r = 0; r < numRows; r++) {
+                // Kolom A (0): NO, Kolom C (2): LAYANAN, Kolom F (5): STATUS DELIVERY
+                const noVal = dataTable.getValue(r, 0);
+                const layananVal = (dataTable.getValue(r, 2) || '').toString().trim().toUpperCase();
+                const statusVal = (dataTable.getValue(r, 5) || '').toString().trim().toUpperCase();
 
-                Object.keys(row).forEach(key => {
-                    const cleanKey = key.trim().toUpperCase();
-                    if (cleanKey === 'NO' || cleanKey === 'NO.') {
-                        noVal = (row[key] || '').toString().trim();
-                    }
-                    if (cleanKey.includes('STATUS')) {
-                        statusVal = (row[key] || '').toString().trim().toUpperCase();
-                    }
-                    if (cleanKey.includes('LAYANAN')) {
-                        layananVal = (row[key] || '').toString().trim().toUpperCase();
-                    }
-                });
-
-                // Validasi hanya memproses baris yang memiliki nomor order (mencegah kalkulasi baris kosong)
-                if (noVal !== '' && !isNaN(parseInt(noVal))) {
+                // Validasi hanya menghitung baris yang memiliki nomor urut valid (mencegah kalkulasi baris kosong)
+                if (noVal !== null && noVal !== '' && !isNaN(parseInt(noVal))) {
                     total++;
 
                     if (statusVal.includes('DONE')) done++;
@@ -340,7 +336,7 @@
                     if (layananVal.includes('IP TRANSIT')) ipTransit++;
                     else hsi++;
                 }
-            });
+            }
 
             // Update UI Metrics
             document.getElementById('cardTotal').innerText = total;
@@ -363,40 +359,32 @@
             document.getElementById('progressPercentageText').innerText = `${percentage}%`;
             document.getElementById('progressSubtext').innerText = `${done} dari ${total} Total Order Selesai`;
 
-            // Chart & Status Marker
+            // Render Chart
             initChart(done, ogp, jt, input);
 
             document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
-            document.getElementById('statusText').innerText = "Real-time Live Sync dari Google Sheets";
+            document.getElementById('statusText').innerText = "Real-time Live Sync (Direct No-Cache)";
 
             const now = new Date();
             document.getElementById('lastUpdated').innerHTML = `<i class="fa-solid fa-clock text-cyan-400 mr-1"></i> Terakhir Diperbarui: ${now.toLocaleTimeString('id-ID')} WIB`;
-        }
+        };
 
         function fetchDataFromSheet() {
-            const cacheBusterUrl = csvUrl + '&_t=' + new Date().getTime();
+            // Hapus script lama jika ada
+            const oldScript = document.getElementById('gviz_script');
+            if (oldScript) oldScript.remove();
 
-            Papa.parse(cacheBusterUrl, {
-                download: true,
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    if (results && results.data && results.data.length > 0) {
-                        processRows(results.data);
-                    }
-                },
-                error: function(err) {
-                    console.error("Gagal menarik CSV:", err);
-                    document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-red-500";
-                    document.getElementById('statusText').innerText = "Koneksi ke Google Sheets Gagal";
-                }
-            });
+            // Injeksi Script JSONP dengan parameter unik timestamp untuk memaksa Google Sheet memberikan data paling baru
+            const script = document.createElement('script');
+            script.id = 'gviz_script';
+            script.src = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=responseHandler:handleDirectSheetData&sheet=Sheet1&_t=${new Date().getTime()}`;
+            document.body.appendChild(script);
         }
 
         window.addEventListener('load', () => {
             updateTimer();
             fetchDataFromSheet();
-            setInterval(fetchDataFromSheet, 30000);
+            setInterval(fetchDataFromSheet, 15000); // Auto-refresh setiap 15 detik
         });
     </script>
 </body>
