@@ -75,7 +75,7 @@
                      class="absolute bottom-6 transition-all duration-1000 ease-out flex flex-col items-center"
                      style="left: 2%;">
                     <div class="bg-cyan-500 text-slate-900 font-bold text-xs px-2 py-0.5 rounded-full shadow-md mb-1 whitespace-nowrap">
-                        Team HSI
+                        Telkom
                     </div>
                     <div class="running-animation text-3xl text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]">
                         <i class="fa-solid fa-person-running"></i>
@@ -98,27 +98,32 @@
             </div>
         </section>
 
-        <!-- CARDS METRIC -->
+        <!-- CARDS METRIC (URUTAN BARU: TOTAL ORDER - INPUT ORDER - JT - OGP - DONE) -->
         <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <!-- 1. Total Order -->
             <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md">
                 <p class="text-slate-400 text-xs font-semibold uppercase">Total Order</p>
                 <p id="cardTotal" class="text-3xl font-extrabold text-white mt-1">-</p>
             </div>
-            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-emerald-500">
-                <p class="text-slate-400 text-xs font-semibold uppercase">Done</p>
-                <p id="cardDone" class="text-3xl font-extrabold text-emerald-400 mt-1">-</p>
+            <!-- 2. Input Order -->
+            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-slate-500">
+                <p class="text-slate-400 text-xs font-semibold uppercase">Input Order</p>
+                <p id="cardInput" class="text-3xl font-extrabold text-slate-300 mt-1">-</p>
             </div>
-            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-blue-500">
-                <p class="text-slate-400 text-xs font-semibold uppercase">OGP</p>
-                <p id="cardOGP" class="text-3xl font-extrabold text-blue-400 mt-1">-</p>
-            </div>
+            <!-- 3. JT -->
             <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-amber-500">
                 <p class="text-slate-400 text-xs font-semibold uppercase">JT</p>
                 <p id="cardJT" class="text-3xl font-extrabold text-amber-400 mt-1">-</p>
             </div>
-            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-slate-500 col-span-2 md:col-span-1">
-                <p class="text-slate-400 text-xs font-semibold uppercase">Input Order</p>
-                <p id="cardInput" class="text-3xl font-extrabold text-slate-300 mt-1">-</p>
+            <!-- 4. OGP -->
+            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-blue-500">
+                <p class="text-slate-400 text-xs font-semibold uppercase">OGP</p>
+                <p id="cardOGP" class="text-3xl font-extrabold text-blue-400 mt-1">-</p>
+            </div>
+            <!-- 5. Done -->
+            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-emerald-500 col-span-2 md:col-span-1">
+                <p class="text-slate-400 text-xs font-semibold uppercase">Done</p>
+                <p id="cardDone" class="text-3xl font-extrabold text-emerald-400 mt-1">-</p>
             </div>
         </section>
 
@@ -204,7 +209,6 @@
             let hsi = 0, ipTransit = 0;
 
             rows.forEach(row => {
-                // Konversi key dan value ke uppercase & trim untuk menghindari isu karakter tersembunyi
                 let statusVal = '';
                 let layananVal = '';
 
@@ -230,12 +234,12 @@
                 else if (layananVal.includes('IP TRANSIT')) ipTransit++;
             });
 
-            // Update UI Metrics
+            // Update UI Metrics (Urutan: Total -> Input -> JT -> OGP -> Done)
             document.getElementById('cardTotal').innerText = total;
-            document.getElementById('cardDone').innerText = done;
-            document.getElementById('cardOGP').innerText = ogp;
-            document.getElementById('cardJT').innerText = jt;
             document.getElementById('cardInput').innerText = input;
+            document.getElementById('cardJT').innerText = jt;
+            document.getElementById('cardOGP').innerText = ogp;
+            document.getElementById('cardDone').innerText = done;
 
             document.getElementById('hsiCount').innerText = `${hsi} Order`;
             document.getElementById('ipTransitCount').innerText = `${ipTransit} Order`;
@@ -281,7 +285,7 @@
 
         window.addEventListener('load', () => {
             fetchDataFromSheet();
-            setInterval(fetchDataFromSheet, 30000); // Auto refresh tiap 30 detik
+            setInterval(fetchDataFromSheet, 30000);
         });
     </script>
 </body>
