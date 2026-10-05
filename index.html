@@ -37,14 +37,21 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
 
-    <!-- Header dengan Logo Telkom Indonesia -->
+    <!-- Header dengan Logo Telkom Indonesia Inline SVG -->
     <header class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center border-b border-slate-700 pb-5 gap-4">
         <div class="flex items-center gap-4">
-            <!-- Logo Telkom Indonesia -->
-            <div class="bg-white p-2 rounded-xl shadow-md border border-slate-700 flex items-center justify-center">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/b/bc/Telkom_Indonesia_2013.svg" 
-                     alt="Logo Telkom Indonesia" 
-                     class="h-10 md:h-12 w-auto object-contain">
+            <!-- Logo Telkom Indonesia (Embedded SVG - Anti Broken) -->
+            <div class="bg-white px-3 py-2 rounded-xl shadow-md border border-slate-700 flex items-center justify-center">
+                <svg class="h-8 md:h-10 w-auto" viewBox="0 0 500 350" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Tangan Merah & Cincin Abu-abu Logo Telkom -->
+                    <path d="M410.5 70.2C382.1 36.1 334.3 38.6 322.8 59.5C311.2 80.4 332.6 112 360.9 146.1C389.3 180.2 414.8 203.8 426.3 182.9C437.9 162 438.8 104.3 410.5 70.2Z" fill="#ED1C24"/>
+                    <path d="M460.2 125.1C448.7 100.8 395.2 85.1 354.1 123.6C312.9 162.2 314.8 214.5 326.3 238.8C337.8 263.1 386.3 286.2 427.5 247.7C468.6 209.1 471.7 149.4 460.2 125.1Z" fill="#ED1C24"/>
+                    <path d="M352.8 111.5C305.8 126.2 280.5 174.5 296.3 219.4C312.1 264.3 363.1 289 410.1 274.3C457.1 259.6 482.4 211.3 466.6 166.4C450.8 121.5 399.8 96.8 352.8 111.5ZM398.8 238.6C369.3 247.8 337.3 232.3 327.4 204.1C317.5 175.9 333.4 145.6 362.9 136.4C392.4 127.2 424.4 142.7 434.3 170.9C444.2 199.1 428.3 229.4 398.8 238.6Z" fill="#717375"/>
+                    <path d="M432.5 175.8C425.4 155.6 398.7 144.5 372.9 151C347.1 157.5 332.1 179.1 339.2 199.3C346.3 219.5 373 230.6 398.8 224.1C424.6 217.6 439.6 196 432.5 175.8Z" fill="#ED1C24"/>
+                    <!-- Teks Telkom Indonesia -->
+                    <text x="30" y="195" font-family="'Arial', 'Helvetica', sans-serif" font-weight="bold" font-size="78" fill="#000000">Telkom</text>
+                    <text x="30" y="275" font-family="'Arial', 'Helvetica', sans-serif" font-weight="bold" font-size="78" fill="#000000">Indonesia</text>
+                </svg>
             </div>
             <div>
                 <h1 class="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
