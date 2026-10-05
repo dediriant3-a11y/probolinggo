@@ -28,12 +28,20 @@
             transform-origin: bottom left;
             animation: flagWave 1.5s infinite ease-in-out;
         }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.6); }
+        }
+        .timer-warning {
+            animation: pulseGlow 1.5s infinite ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
 
     <!-- Header -->
-    <header class="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-center border-b border-slate-700 pb-5 gap-4">
+    <header class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center border-b border-slate-700 pb-5 gap-4">
         <div>
             <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
                 <i class="fa-solid fa-chart-line mr-2"></i>Dashboard HSI Probolinggo
@@ -55,7 +63,54 @@
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto space-y-8">
+    <main class="max-w-7xl mx-auto space-y-6">
+
+        <!-- BANNER HITUNG MUNDUR / COUNTDOWN TIMER -->
+        <section class="bg-slate-800/90 border border-amber-500/30 rounded-2xl p-5 shadow-xl relative overflow-hidden backdrop-blur-sm">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl">
+                        <i class="fa-solid fa-hourglass-half animate-spin" style="animation-duration: 8s;"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+                            Peringatan Batas Waktu Target
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            Batas Akhir: <span id="deadlineDisplay" class="font-semibold text-amber-300">31 Oktober 2026, 23:59 WIB</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Digit Timer Display -->
+                <div class="flex items-center gap-2 md:gap-3 text-center">
+                    <div class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 min-w-[60px]">
+                        <span id="timerDays" class="text-2xl md:text-3xl font-black text-cyan-400">00</span>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Hari</p>
+                    </div>
+                    <span class="text-2xl font-bold text-slate-500">:</span>
+                    <div class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 min-w-[60px]">
+                        <span id="timerHours" class="text-2xl md:text-3xl font-black text-cyan-400">00</span>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Jam</p>
+                    </div>
+                    <span class="text-2xl font-bold text-slate-500">:</span>
+                    <div class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 min-w-[60px]">
+                        <span id="timerMinutes" class="text-2xl md:text-3xl font-black text-cyan-400">00</span>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Menit</p>
+                    </div>
+                    <span class="text-2xl font-bold text-slate-500">:</span>
+                    <div class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 min-w-[60px]">
+                        <span id="timerSeconds" class="text-2xl md:text-3xl font-black text-amber-400">00</span>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Detik</p>
+                    </div>
+
+                    <!-- Tombol Set Deadline -->
+                    <button onclick="changeDeadline()" class="ml-2 bg-slate-700/80 hover:bg-slate-600 text-slate-300 hover:text-white p-2.5 rounded-xl transition text-xs flex items-center gap-1" title="Ubah Batas Waktu">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
 
         <!-- ANIMASI PROGRES MENUJU BENDERA FINISH -->
         <section class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
@@ -75,7 +130,7 @@
                      class="absolute bottom-6 transition-all duration-1000 ease-out flex flex-col items-center"
                      style="left: 2%;">
                     <div class="bg-cyan-500 text-slate-900 font-bold text-xs px-2 py-0.5 rounded-full shadow-md mb-1 whitespace-nowrap">
-                        Telkom
+                        Team HSI
                     </div>
                     <div class="running-animation text-3xl text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]">
                         <i class="fa-solid fa-person-running"></i>
@@ -98,7 +153,7 @@
             </div>
         </section>
 
-        <!-- CARDS METRIC (URUTAN BARU: TOTAL ORDER - INPUT ORDER - JT - OGP - DONE) -->
+        <!-- CARDS METRIC (URUTAN: TOTAL ORDER - INPUT ORDER - JT - OGP - DONE) -->
         <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
             <!-- 1. Total Order -->
             <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md">
@@ -177,6 +232,55 @@
 
         let myChart = null;
 
+        // --- LOGIK COUNTDOWN TIMER ---
+        let targetDeadline = localStorage.getItem('hsi_deadline') 
+            ? new Date(localStorage.getItem('hsi_deadline')) 
+            : new Date('2026-10-31T23:59:59');
+
+        function updateTimer() {
+            const now = new Date().getTime();
+            const distance = targetDeadline.getTime() - now;
+
+            if (distance < 0) {
+                document.getElementById('timerDays').innerText = "00";
+                document.getElementById('timerHours').innerText = "00";
+                document.getElementById('timerMinutes').innerText = "00";
+                document.getElementById('timerSeconds').innerText = "00";
+                document.getElementById('deadlineDisplay').innerText = "WAKTU HABIS!";
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById('timerDays').innerText = String(days).padStart(2, '0');
+            document.getElementById('timerHours').innerText = String(hours).padStart(2, '0');
+            document.getElementById('timerMinutes').innerText = String(minutes).padStart(2, '0');
+            document.getElementById('timerSeconds').innerText = String(seconds).padStart(2, '0');
+
+            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('deadlineDisplay').innerText = targetDeadline.toLocaleDateString('id-ID', options) + " WIB";
+        }
+
+        function changeDeadline() {
+            const input = prompt("Masukkan tanggal & waktu target baru (Format YYYY-MM-DDTHH:MM, misal: 2026-10-31T23:59)", targetDeadline.toISOString().slice(0, 16));
+            if (input) {
+                const newDate = new Date(input);
+                if (!isNaN(newDate.getTime())) {
+                    targetDeadline = newDate;
+                    localStorage.setItem('hsi_deadline', newDate.toISOString());
+                    updateTimer();
+                } else {
+                    alert("Format tanggal tidak valid!");
+                }
+            }
+        }
+
+        setInterval(updateTimer, 1000);
+
+        // --- LOGIK CHART & SHEET ---
         function initChart(done, ogp, jt, input) {
             const ctx = document.getElementById('statusChart').getContext('2d');
             if (myChart) myChart.destroy();
@@ -234,7 +338,7 @@
                 else if (layananVal.includes('IP TRANSIT')) ipTransit++;
             });
 
-            // Update UI Metrics (Urutan: Total -> Input -> JT -> OGP -> Done)
+            // Update UI Metrics
             document.getElementById('cardTotal').innerText = total;
             document.getElementById('cardInput').innerText = input;
             document.getElementById('cardJT').innerText = jt;
@@ -284,6 +388,7 @@
         }
 
         window.addEventListener('load', () => {
+            updateTimer();
             fetchDataFromSheet();
             setInterval(fetchDataFromSheet, 30000);
         });
