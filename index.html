@@ -30,7 +30,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen p-4 md:p-8 font-sans">
 
-    <!-- Header dengan Logo Telkom (Tema Cerah) -->
+    <!-- Header dengan Logo Telkom -->
     <header class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center border-b border-slate-200 pb-5 gap-4">
         <div class="flex items-center gap-4">
             <div class="bg-white p-2.5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center">
@@ -80,7 +80,6 @@
                     </div>
                 </div>
 
-                <!-- Digit Timer Display -->
                 <div class="flex items-center gap-2 md:gap-3 text-center">
                     <div class="bg-white/10 border border-white/20 backdrop-blur-md rounded-xl px-3 py-2 min-w-[60px]">
                         <span id="timerDays" class="text-2xl md:text-3xl font-black text-white">00</span>
@@ -106,34 +105,6 @@
                         <i class="fa-solid fa-pen-to-square"></i>
                     </button>
                 </div>
-            </div>
-        </section>
-
-        <!-- KELOLA DATA CONCERN (KOLOM M - N, BARIS 2 - 4) -->
-        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Daftar Concern & Kendala Operasional (GDoc M & N)
-                </h3>
-                <span id="concernSummaryBadge" class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">
-                    Memuat status...
-                </span>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
-                            <th class="py-3 px-4 rounded-l-xl w-12">#</th>
-                            <th class="py-3 px-4">Deskripsi Concern / Kendala</th>
-                            <th class="py-3 px-4 rounded-r-xl text-center w-36">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="concernTableBody" class="divide-y divide-slate-100">
-                        <tr>
-                            <td colspan="3" class="text-center py-4 text-slate-400 italic">Memuat data concern dari Google Sheets...</td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
         </section>
 
@@ -287,6 +258,34 @@
             </div>
         </section>
 
+        <!-- KELOLA DATA CONCERN (DIPINDAHKAN KE BAGIAN BWAH) -->
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Daftar Concern & Kendala Operasional
+                </h3>
+                <span id="concernSummaryBadge" class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">
+                    Memuat status...
+                </span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
+                            <th class="py-3 px-4 rounded-l-xl w-12">#</th>
+                            <th class="py-3 px-4">Deskripsi Concern / Kendala</th>
+                            <th class="py-3 px-4 rounded-r-xl text-center w-36">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="concernTableBody" class="divide-y divide-slate-100">
+                        <tr>
+                            <td colspan="3" class="text-center py-4 text-slate-400 italic">Memuat data concern dari Google Sheets...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
     </main>
 
     <script>
@@ -314,318 +313,4 @@
             }
 
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            document.getElementById('timerDays').innerText = String(days).padStart(2, '0');
-            document.getElementById('timerHours').innerText = String(hours).padStart(2, '0');
-            document.getElementById('timerMinutes').innerText = String(minutes).padStart(2, '0');
-            document.getElementById('timerSeconds').innerText = String(seconds).padStart(2, '0');
-
-            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            document.getElementById('deadlineDisplay').innerText = targetDeadline.toLocaleDateString('id-ID', options) + " WIB";
-        }
-
-        function changeDeadline() {
-            const input = prompt("Masukkan tanggal & waktu target baru (Format YYYY-MM-DDTHH:MM)", targetDeadline.toISOString().slice(0, 16));
-            if (input) {
-                const newDate = new Date(input);
-                if (!isNaN(newDate.getTime())) {
-                    targetDeadline = newDate;
-                    localStorage.setItem('hsi_deadline', newDate.toISOString());
-                    updateTimer();
-                } else {
-                    alert("Format tanggal tidak valid!");
-                }
-            }
-        }
-        setInterval(updateTimer, 1000);
-
-        // --- DOUGHNUT CHART LOGIC ---
-        function initChart(done, ogp, jt, input) {
-            const ctx = document.getElementById('statusChart').getContext('2d');
-            if (myChart) myChart.destroy();
-
-            myChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['DONE', 'OGP', 'JT', 'INPUT ORDER'],
-                    datasets: [{
-                        data: [done, ogp, jt, input],
-                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#94a3b8'],
-                        borderWidth: 0,
-                        hoverOffset: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { color: '#475569', font: { weight: '600' } } }
-                    },
-                    cutout: '70%'
-                }
-            });
-        }
-
-        // --- LINE CHART LOGIC ---
-        function initDailyTrendChart(labels, dataValues) {
-            const ctx = document.getElementById('dailyTrendChart').getContext('2d');
-            if (trendChart) trendChart.destroy();
-
-            trendChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Order DONE',
-                        data: dataValues,
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        pointBackgroundColor: '#10b981',
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { ticks: { color: '#64748b' }, grid: { color: '#f1f5f9' } },
-                        y: { ticks: { color: '#64748b', precision: 0 }, grid: { color: '#f1f5f9' }, beginAtZero: true }
-                    },
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
-            });
-        }
-
-        function parseFormattedDateKey(val) {
-            if (!val) return null;
-            if (val instanceof Date) {
-                const y = val.getFullYear();
-                const m = String(val.getMonth() + 1).padStart(2, '0');
-                const d = String(val.getDate()).padStart(2, '0');
-                return `${y}-${m}-${d}`;
-            }
-
-            const strVal = val.toString().trim();
-            if (!strVal) return null;
-
-            if (/^\d{4}-\d{2}-\d{2}/.test(strVal)) {
-                return strVal.substring(0, 10);
-            }
-
-            const parts = strVal.split(/[\/\.-]/);
-            if (parts.length >= 3) {
-                let p1 = parseInt(parts[0], 10);
-                let p2 = parseInt(parts[1], 10);
-                let p3 = parseInt(parts[2], 10);
-
-                if (!isNaN(p1) && !isNaN(p2) && !isNaN(p3)) {
-                    if (p1 > 1000) return `${p1}-${String(p2).padStart(2, '0')}-${String(p3).padStart(2, '0')}`;
-                    if (p3 > 1000) return `${p3}-${String(p2).padStart(2, '0')}-${String(p1).padStart(2, '0')}`;
-                }
-            }
-
-            const nativeDate = new Date(strVal);
-            if (!isNaN(nativeDate.getTime())) {
-                const y = nativeDate.getFullYear();
-                const m = String(nativeDate.getMonth() + 1).padStart(2, '0');
-                const d = String(nativeDate.getDate()).padStart(2, '0');
-                return `${y}-${m}-${d}`;
-            }
-
-            return null;
-        }
-
-        // --- RENDER TABEL CONCERN ---
-        function renderConcerns(concerns, rows) {
-            const tbody = document.getElementById('concernTableBody');
-            tbody.innerHTML = '';
-
-            let list = concerns || [];
-
-            // Fallback Ekstraksi Langsung Kolom M & N dari baris 2 s.d 4 apabila Apps Script belum diperbarui
-            if (list.length === 0 && Array.isArray(rows) && rows.length > 1) {
-                for (let r = 1; r <= 3; r++) {
-                    if (rows[r]) {
-                        const desc = rows[r][12] !== undefined ? rows[r][12] : ''; // Kolom M (Index 12)
-                        const st = rows[r][13] !== undefined ? rows[r][13] : '';   // Kolom N (Index 13)
-                        if (desc || st) {
-                            list.push({ deskripsi: desc, status: st });
-                        }
-                    }
-                }
-            }
-
-            if (!list || list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-slate-400">Tidak ada data concern di baris 2 - 4.</td></tr>`;
-                document.getElementById('concernSummaryBadge').className = "bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1 rounded-full";
-                document.getElementById('concernSummaryBadge').innerText = "Semua Lancar";
-                return;
-            }
-
-            let ongoingCount = 0;
-
-            list.forEach((item, index) => {
-                const descText = item.deskripsi || '-';
-                const statusText = (item.status || 'ONGOING').toString().trim().toUpperCase();
-                const isDone = statusText === 'DONE' || statusText === 'SELESAI';
-
-                if (!isDone) ongoingCount++;
-
-                const statusBadge = isDone 
-                    ? `<span class="bg-emerald-100 text-emerald-700 text-xs font-black px-3 py-1.5 rounded-full inline-flex items-center gap-1 shadow-sm"><i class="fa-solid fa-circle-check"></i> DONE</span>`
-                    : `<span class="bg-amber-100 text-amber-700 text-xs font-black px-3 py-1.5 rounded-full inline-flex items-center gap-1 shadow-sm"><i class="fa-solid fa-clock"></i> ONGOING</span>`;
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition";
-                tr.innerHTML = `
-                    <td class="py-3 px-4 font-bold text-slate-400">${index + 1}</td>
-                    <td class="py-3 px-4 font-medium text-slate-800">${descText}</td>
-                    <td class="py-3 px-4 text-center">${statusBadge}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            const summaryBadge = document.getElementById('concernSummaryBadge');
-            if (ongoingCount > 0) {
-                summaryBadge.className = "bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full animate-pulse";
-                summaryBadge.innerText = `${ongoingCount} Concern Ongoing`;
-            } else {
-                summaryBadge.className = "bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full";
-                summaryBadge.innerText = "Semua Concern DONE";
-            }
-        }
-
-        // --- FETCH REAL-TIME DATA ---
-        async function fetchDataFromSheet() {
-            try {
-                const response = await fetch(webAppUrl + '?_t=' + new Date().getTime());
-                const rawData = await response.json();
-
-                let rows = rawData;
-                let concerns = [];
-
-                if (!Array.isArray(rawData) && rawData.rows) {
-                    rows = rawData.rows;
-                    concerns = rawData.concerns || [];
-                }
-
-                renderConcerns(concerns, rows);
-
-                if (!rows || !Array.isArray(rows) || rows.length <= 1) return;
-
-                const header = rows[0].map(h => (h || '').toString().trim().toUpperCase());
-                const colNo = header.findIndex(h => h === 'NO' || h === 'NO.');
-                const colLayanan = header.findIndex(h => h.includes('LAYANAN'));
-                const colStatus = header.findIndex(h => h.includes('STATUS'));
-                const colDate = header.findIndex(h => h.includes('TGL CLOSE') || h.includes('TGL DONE') || h.includes('TANGGAL') || h.includes('TGL'));
-
-                let total = 0;
-                let done = 0, ogp = 0, jt = 0, input = 0;
-                let hsi = 0, ipTransit = 0;
-
-                const dailyDoneMap = {};
-                const nowObj = new Date();
-                const todayStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth() + 1).padStart(2, '0')}-${String(nowObj.getDate()).padStart(2, '0')}`;
-                let todayDoneCount = 0;
-
-                for (let i = 1; i < rows.length; i++) {
-                    const row = rows[i];
-                    const noVal = colNo !== -1 ? row[colNo] : row[0];
-                    const layananVal = (colLayanan !== -1 ? row[colLayanan] : row[2] || '').toString().trim().toUpperCase();
-                    const statusVal = (colStatus !== -1 ? row[colStatus] : row[5] || '').toString().trim().toUpperCase();
-                    const dateVal = colDate !== -1 ? row[colDate] : null;
-
-                    if (noVal !== null && noVal !== '' && !isNaN(parseInt(noVal))) {
-                        total++;
-
-                        if (statusVal.includes('DONE')) {
-                            done++;
-                            let dateKey = parseFormattedDateKey(dateVal) || todayStr;
-                            dailyDoneMap[dateKey] = (dailyDoneMap[dateKey] || 0) + 1;
-                            if (dateKey === todayStr) todayDoneCount++;
-                        }
-                        else if (statusVal.includes('OGP')) ogp++;
-                        else if (statusVal.includes('JT')) jt++;
-                        else input++;
-
-                        if (layananVal.includes('IP TRANSIT')) ipTransit++;
-                        else hsi++;
-                    }
-                }
-
-                // Update UI Metrics
-                document.getElementById('cardTotal').innerText = total;
-                document.getElementById('cardInput').innerText = input;
-                document.getElementById('cardJT').innerText = jt;
-                document.getElementById('cardOGP').innerText = ogp;
-                document.getElementById('cardDone').innerText = done;
-
-                document.getElementById('cardDoneToday').innerText = todayDoneCount;
-                const todayShare = done ? ((todayDoneCount / done) * 100).toFixed(1) : 0;
-                document.getElementById('cardDoneTodayShare').innerText = `${todayShare}% dari Done`;
-
-                const sortedDates = Object.keys(dailyDoneMap).sort();
-                const activeDays = sortedDates.length || 1;
-                const avgDone = (done / activeDays).toFixed(1);
-
-                document.getElementById('cardAvgDoneDaily').innerText = avgDone;
-                document.getElementById('cardActiveDays').innerText = `${activeDays} Hari`;
-
-                let chartLabels = [];
-                let chartValues = [];
-                if (sortedDates.length > 0) {
-                    chartLabels = sortedDates.map(d => {
-                        const parts = d.split('-');
-                        return `${parts[2]}/${parts[1]}`;
-                    });
-                    chartValues = sortedDates.map(d => dailyDoneMap[d]);
-                } else {
-                    chartLabels = [todayStr.split('-').reverse().slice(0,2).join('/')];
-                    chartValues = [todayDoneCount];
-                }
-                initDailyTrendChart(chartLabels, chartValues);
-
-                document.getElementById('hsiCount').innerText = `${hsi} Order`;
-                document.getElementById('ipTransitCount').innerText = `${ipTransit} Order`;
-                document.getElementById('hsiBar').style.width = total ? `${(hsi / total) * 100}%` : '0%';
-                document.getElementById('ipTransitBar').style.width = total ? `${(ipTransit / total) * 100}%` : '0%';
-
-                const percentage = total ? ((done / total) * 100).toFixed(1) : 0;
-                const maxPositionPercent = 88;
-                const targetLeft = Math.max(2, Math.min(maxPositionPercent, (percentage / 100) * maxPositionPercent));
-
-                document.getElementById('runner').style.left = `${targetLeft}%`;
-                document.getElementById('progressPercentageText').innerText = `${percentage}%`;
-                document.getElementById('progressSubtext').innerText = `${done} dari ${total} Total Order Selesai`;
-
-                initChart(done, ogp, jt, input);
-
-                document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
-                document.getElementById('statusText').innerText = "Real-time Live Sync Active";
-
-                const now = new Date();
-                document.getElementById('lastUpdated').innerHTML = `<i class="fa-solid fa-clock text-blue-600 mr-1"></i> Terakhir Diperbarui: ${now.toLocaleTimeString('id-ID')} WIB`;
-
-            } catch (err) {
-                console.error("Gagal menarik data via Web App:", err);
-                document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-red-500";
-                document.getElementById('statusText').innerText = "Koneksi Google Sheets Gagal";
-            }
-        }
-
-        window.addEventListener('load', () => {
-            updateTimer();
-            fetchDataFromSheet();
-            setInterval(fetchDataFromSheet, 10000);
-        });
-    </script>
-</body>
-</html>
+            const hours = Math.floor((distance % (1000 * 60 * 60 *
