@@ -3,632 +3,420 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Real-time HSI Probolinggo</title>
+    <title>Dashboard Delivery Project Probolinggo</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PapaParse untuk Membaca CSV Google Sheets secara Live Sync -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        @keyframes runBob {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
-        }
-        .running-animation { animation: runBob 0.6s infinite ease-in-out; }
-
-        @keyframes flagWave {
-            0%, 100% { transform: rotate(0deg) skewY(0deg); }
-            25% { transform: rotate(-5deg) skewY(-4deg); }
-            75% { transform: rotate(5deg) skewY(4deg); }
-        }
-        .flag-wave {
-            transform-origin: bottom left;
-            animation: flagWave 1.5s infinite ease-in-out;
+        .bike-container {
+            position: absolute;
+            bottom: 6px;
+            left: 0%;
+            transition: left 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(-50%);
         }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen p-4 md:p-8 font-sans">
 
-    <!-- Header dengan Logo Telkom (Tema Cerah) -->
-    <header class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center border-b border-slate-200 pb-5 gap-4">
-        <div class="flex items-center gap-4">
-            <div class="bg-white p-2.5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center">
-                <img src="logo.png" 
-                     alt="Telkom Indonesia" 
-                     class="h-10 md:h-12 w-auto object-contain"
-                     onerror="this.src='https://images.seeklogo.com/logo-png/38/2/telkom-indonesia-logo-png_seeklogo-384351.png'">
+    <!-- Header & Peringatan Target -->
+    <header class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-slate-200 pb-4 gap-4 bg-white p-6 rounded-2xl shadow-sm">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-red-600 flex items-center gap-2">
+                <i class="fa-solid fa-chart-line"></i> Dashboard Delivery Project Probolinggo
+            </h1>
+            <p class="text-slate-500 text-sm mt-1 flex items-center gap-2">
+                <span>Sumber Data: Google Spreadsheet (HSI PROBOLINGGO)</span>
+                <span id="sync-status" class="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-semibold">
+                    <i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...
+                </span>
+            </p>
+        </div>
+        
+        <!-- Peringatan Batas Waktu Target -->
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-4 shadow-sm">
+            <div class="bg-red-100 text-red-600 p-3 rounded-lg text-2xl">
+                <i class="fa-solid fa-hourglass-half"></i>
             </div>
             <div>
-                <h1 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
-                    Dashboard HSI <span class="text-red-600">Probolinggo</span>
-                </h1>
-                <p class="text-slate-500 text-sm mt-1 flex items-center gap-2">
-                    <span id="statusIndicator" class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-                    <span id="statusText">Menghubungkan ke Google Sheets...</span>
-                </p>
+                <span class="text-xs text-red-700 uppercase tracking-wider font-bold">Batas Waktu Target</span>
+                <div class="text-lg font-extrabold text-red-600">31 Oktober 2026</div>
+                <div id="countdown" class="text-xs text-red-800 font-mono mt-0.5 font-semibold">Menghitung...</div>
             </div>
-        </div>
-        <div class="flex items-center gap-3">
-            <button onclick="fetchDataFromSheet()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-semibold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm">
-                <i class="fa-solid fa-rotate text-blue-600"></i> Refresh Manual
-            </button>
-            <a href="https://docs.google.com/spreadsheets/d/1ixpWhHd5Vhwu89hAIMZkeHOjmXrHhCGuRz-HRlvbo9M/edit?usp=sharing" 
-               target="_blank" 
-               class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-xl transition duration-200 shadow-md flex items-center gap-2 text-sm">
-                <i class="fa-solid fa-file-excel"></i> Buka Spreadsheet
-            </a>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto space-y-6">
+    <!-- Main Content -->
+    <main class="space-y-8">
 
-        <!-- BANNER HITUNG MUNDUR -->
-        <section class="bg-gradient-to-r from-red-600 to-rose-700 rounded-2xl p-5 shadow-lg text-white relative overflow-hidden">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-4 relative z-10">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white text-2xl">
-                        <i class="fa-solid fa-hourglass-half animate-spin" style="animation-duration: 8s;"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                            Peringatan Batas Waktu Target
-                        </h2>
-                        <p class="text-xs text-rose-100 mt-0.5">
-                            Batas Akhir: <span id="deadlineDisplay" class="font-bold text-yellow-300">31 Oktober 2026, 23:59 WIB</span>
-                        </p>
-                    </div>
+        <!-- 1. Section Summary Cards Total -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <!-- Total Order -->
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between hover:shadow-md transition">
+                <div class="flex justify-between items-start text-slate-500">
+                    <span class="text-sm font-semibold">Total Order</span>
+                    <i class="fa-solid fa-list-check text-blue-600 text-xl"></i>
                 </div>
+                <div class="mt-4">
+                    <div id="total-order" class="text-3xl font-black text-slate-900">...</div>
+                    <span class="text-xs text-slate-500">Total WO Terdaftar</span>
+                </div>
+            </div>
 
-                <!-- Digit Timer Display -->
-                <div class="flex items-center gap-2 md:gap-3 text-center">
-                    <div class="bg-white/10 border border-white/20 backdrop-blur-md rounded-xl px-3 py-2 min-w-[60px]">
-                        <span id="timerDays" class="text-2xl md:text-3xl font-black text-white">00</span>
-                        <p class="text-[10px] text-rose-200 uppercase tracking-wider font-semibold">Hari</p>
-                    </div>
-                    <span class="text-2xl font-bold text-white/60">:</span>
-                    <div class="bg-white/10 border border-white/20 backdrop-blur-md rounded-xl px-3 py-2 min-w-[60px]">
-                        <span id="timerHours" class="text-2xl md:text-3xl font-black text-white">00</span>
-                        <p class="text-[10px] text-rose-200 uppercase tracking-wider font-semibold">Jam</p>
-                    </div>
-                    <span class="text-2xl font-bold text-white/60">:</span>
-                    <div class="bg-white/10 border border-white/20 backdrop-blur-md rounded-xl px-3 py-2 min-w-[60px]">
-                        <span id="timerMinutes" class="text-2xl md:text-3xl font-black text-white">00</span>
-                        <p class="text-[10px] text-rose-200 uppercase tracking-wider font-semibold">Menit</p>
-                    </div>
-                    <span class="text-2xl font-bold text-white/60">:</span>
-                    <div class="bg-white/10 border border-white/20 backdrop-blur-md rounded-xl px-3 py-2 min-w-[60px]">
-                        <span id="timerSeconds" class="text-2xl md:text-3xl font-black text-yellow-300">00</span>
-                        <p class="text-[10px] text-rose-200 uppercase tracking-wider font-semibold">Detik</p>
-                    </div>
+            <!-- Input Order -->
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between hover:shadow-md transition">
+                <div class="flex justify-between items-start text-slate-500">
+                    <span class="text-sm font-semibold">Input Order</span>
+                    <i class="fa-solid fa-file-circle-plus text-sky-600 text-xl"></i>
+                </div>
+                <div class="mt-4">
+                    <div id="input-order" class="text-3xl font-black text-sky-600">...</div>
+                    <span class="text-xs text-slate-500">Status Input Order</span>
+                </div>
+            </div>
 
-                    <button onclick="changeDeadline()" class="ml-2 bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-xl transition text-xs flex items-center gap-1" title="Ubah Batas Waktu">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </button>
+            <!-- JT (Jaringan Tambahan) -->
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between hover:shadow-md transition">
+                <div class="flex justify-between items-start text-slate-500">
+                    <span class="text-sm font-semibold">JT (Jaringan)</span>
+                    <i class="fa-solid fa-diagram-project text-amber-500 text-xl"></i>
+                </div>
+                <div class="mt-4">
+                    <div id="jt-order" class="text-3xl font-black text-amber-500">...</div>
+                    <span class="text-xs text-slate-500">Jaringan Tambahan</span>
+                </div>
+            </div>
+
+            <!-- OGP -->
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between hover:shadow-md transition">
+                <div class="flex justify-between items-start text-slate-500">
+                    <span class="text-sm font-semibold">OGP</span>
+                    <i class="fa-solid fa-gears text-purple-600 text-xl"></i>
+                </div>
+                <div class="mt-4">
+                    <div id="ogp-order" class="text-3xl font-black text-purple-600">...</div>
+                    <span class="text-xs text-slate-500">On Going Process</span>
+                </div>
+            </div>
+
+            <!-- Done Total -->
+            <div class="bg-white border border-emerald-300 p-5 rounded-2xl flex flex-col justify-between hover:shadow-md transition shadow-sm">
+                <div class="flex justify-between items-start text-slate-500">
+                    <span class="text-sm font-semibold">Done Total</span>
+                    <i class="fa-solid fa-circle-check text-emerald-600 text-xl"></i>
+                </div>
+                <div class="mt-4">
+                    <div id="done-total" class="text-3xl font-black text-emerald-600">...</div>
+                    <span class="text-xs text-emerald-700 font-medium">Selesai Dikerjakan</span>
                 </div>
             </div>
         </section>
 
-        <!-- KELOLA DATA CONCERN (KOLOM M - N) -->
+        <!-- 2. Race to Finish Line Section -->
         <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Project Concern 
-                </h3>
-                <span id="concernSummaryBadge" class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">
-                    Memuat status...
-                </span>
+            <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-2">
+                <div>
+                    <h2 class="text-xl font-bold flex items-center gap-2 text-slate-900">
+                        <i class="fa-solid fa-person-biking text-red-600"></i> Race to Finish Line
+                    </h2>
+                    <p class="text-sm text-slate-500">Progres Target DONE Keseluruhan</p>
+                </div>
+                <div class="text-right">
+                    <span id="progress-percent-text" class="text-3xl font-black text-red-600">0%</span>
+                    <span id="progress-detail-text" class="text-xs text-slate-500 block font-semibold">Selesai</span>
+                </div>
             </div>
+
+            <!-- Track Balap Sepeda Visual -->
+            <div class="relative w-full bg-slate-200 rounded-xl h-24 overflow-hidden border border-slate-300 flex items-center px-6">
+                <!-- Garis Lintasan -->
+                <div class="absolute w-full border-b-2 border-dashed border-slate-400 top-1/2 left-0"></div>
+                
+                <!-- Animasi Sepeda -->
+                <div id="bike-runner" class="bike-container text-red-600 z-10 text-3xl">
+                    <i class="fa-solid fa-person-biking"></i>
+                </div>
+
+                <!-- Finish Line (Bendera Catur) -->
+                <div class="absolute right-6 top-0 bottom-0 w-4 opacity-90 border-l border-r border-slate-400" style="background-image: linear-gradient(45deg, #000 25%, #fff 25%, #fff 50%, #000 50%, #000 75%, #fff 75%, #fff 100%); background-size: 10px 10px;"></div>
+            </div>
+
+            <!-- Rate Harian Required & Grafik DONE Harian -->
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-200">
+                <!-- Rate Harian Needed -->
+                <div class="flex flex-col justify-center bg-amber-50 p-5 rounded-2xl border border-amber-200">
+                    <div class="flex items-center gap-3 mb-2">
+                        <i class="fa-solid fa-gauge-high text-amber-600 text-2xl"></i>
+                        <span class="text-xs text-amber-800 font-bold uppercase tracking-wide">Rate Harian Done Dibutuhkan</span>
+                    </div>
+                    <span id="daily-rate-needed" class="text-2xl font-black text-amber-700">Calculating...</span>
+                    <span class="text-xs text-amber-600 mt-1">Target harian agar selesai sebelum deadline</span>
+                </div>
+
+                <!-- Grafik DONE Harian -->
+                <div class="md:col-span-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold uppercase tracking-wide text-slate-700 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-column text-emerald-600"></i> Grafik Tren DONE Harian
+                        </span>
+                        <span class="text-xs text-slate-500 font-medium">Monitoring Real-time</span>
+                    </div>
+                    <div class="h-32 w-full">
+                        <canvas id="doneDailyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Section Update Order Per Layanan -->
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-sky-600">
+                <i class="fa-solid fa-layer-group"></i> Update Order Per Layanan
+            </h2>
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
-                            <th class="py-3 px-4 rounded-l-xl"></th>
-                            <th class="py-3 px-4">Deskripsi Concern</th>
-                            <th class="py-3 px-4 rounded-r-xl text-center">Status</th>
+                <table class="w-full text-left text-sm text-slate-700">
+                    <thead class="bg-slate-100 text-xs uppercase text-slate-600 border-b border-slate-200">
+                        <tr>
+                            <th class="py-3 px-4">Kategori Layanan</th>
+                            <th class="py-3 px-4 text-center">Total Order</th>
+                            <th class="py-3 px-4 text-center">Input Order</th>
+                            <th class="py-3 px-4 text-center">JT (Jaringan)</th>
+                            <th class="py-3 px-4 text-center">OGP</th>
+                            <th class="py-3 px-4 text-center">Done Total</th>
+                            <th class="py-3 px-4 text-center">Progres DONE (%)</th>
                         </tr>
                     </thead>
-                    <tbody id="concernTableBody" class="divide-y divide-slate-100">
-                        <tr>
-                            <td colspan="3" class="text-center py-4 text-slate-400 italic">Memuat data concern dari Google Sheets...</td>
-                        </tr>
+                    <tbody id="table-layanan-body" class="divide-y divide-slate-200">
+                        <!-- Rendered via JS -->
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <!-- ANIMASI PROGRES RUNNER -->
-        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-flag-checkered text-red-600"></i> Race to Finish Line (Progres Target DONE)
-                </h2>
-                <span id="progressPercentageText" class="text-2xl font-black text-red-600">0%</span>
-            </div>
-
-            <div class="relative w-full bg-slate-50 rounded-xl h-28 border border-slate-200 p-3 flex items-center overflow-hidden">
-                <div class="absolute inset-x-0 bottom-4 border-b-2 border-dashed border-slate-300"></div>
-
-                <div id="runner" 
-                     class="absolute bottom-6 transition-all duration-1000 ease-out flex flex-col items-center"
-                     style="left: 2%;">
-                    <div class="bg-red-600 text-white font-bold text-xs px-2.5 py-0.5 rounded-full shadow-md mb-1 whitespace-nowrap">
-                        Telkom Probolinggo
-                    </div>
-                    <div class="running-animation text-3xl text-red-600 drop-shadow-md">
-                        <i class="fa-solid fa-person-running"></i>
+        <!-- 4. Project Concern Section -->
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-amber-600">
+                <i class="fa-solid fa-triangle-exclamation"></i> Project Concern
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-amber-50/60 border-l-4 border-amber-500 p-4 rounded-r-xl border border-amber-100">
+                    <div class="flex items-start gap-3">
+                        <span class="bg-amber-500 text-white px-2 py-0.5 rounded text-xs font-bold">1</span>
+                        <p class="text-sm text-slate-800 font-medium">
+                            Menunggu Diskominfo Kota Probolinggo melakukan Klik di Inaproc.
+                        </p>
                     </div>
                 </div>
-
-                <div class="absolute right-6 bottom-3 flex flex-col items-center justify-end h-20">
-                    <div class="flag-wave text-4xl text-slate-800 drop-shadow-sm mb-1">
-                        <i class="fa-solid fa-flag-checkered"></i>
+                <div class="bg-amber-50/60 border-l-4 border-amber-500 p-4 rounded-r-xl border border-amber-100">
+                    <div class="flex items-start gap-3">
+                        <span class="bg-amber-500 text-white px-2 py-0.5 rounded text-xs font-bold">2</span>
+                        <p class="text-sm text-slate-800 font-medium">
+                            Ketersediaan NTE memerlukan tambahan support dari Regional.
+                        </p>
                     </div>
-                    <div class="w-1.5 h-12 bg-slate-400 rounded-full shadow-sm"></div>
-                </div>
-            </div>
-
-            <div class="mt-4 flex justify-between text-xs text-slate-500 font-medium">
-                <span>Start</span>
-                <span id="progressSubtext">Memuat Data...</span>
-                <span>Finish Line (Target) 31 Oktober 2026</span>
-            </div>
-        </section>
-
-        <!-- CARDS METRIC UTAMA -->
-        <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
-                <p class="text-slate-500 text-xs font-bold uppercase">Total Order</p>
-                <p id="cardTotal" class="text-3xl font-black text-slate-900 mt-1">-</p>
-            </div>
-            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm border-l-4 border-l-slate-400">
-                <p class="text-slate-500 text-xs font-bold uppercase">Input Order</p>
-                <p id="cardInput" class="text-3xl font-black text-slate-600 mt-1">-</p>
-            </div>
-            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm border-l-4 border-l-amber-500">
-                <p class="text-slate-500 text-xs font-bold uppercase">JT</p>
-                <p id="cardJT" class="text-3xl font-black text-amber-600 mt-1">-</p>
-            </div>
-            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm border-l-4 border-l-blue-500">
-                <p class="text-slate-500 text-xs font-bold uppercase">OGP</p>
-                <p id="cardOGP" class="text-3xl font-black text-blue-600 mt-1">-</p>
-            </div>
-            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm border-l-4 border-l-emerald-500 col-span-2 md:col-span-1">
-                <p class="text-slate-500 text-xs font-bold uppercase">Done Total</p>
-                <p id="cardDone" class="text-3xl font-black text-emerald-600 mt-1">-</p>
-            </div>
-        </section>
-
-        <!-- KARTU RATE DONE HARIAN & PERFORMA -->
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-slate-500 text-xs font-bold uppercase flex items-center gap-1.5">
-                        <i class="fa-solid fa-calendar-day text-emerald-600"></i> Done Hari Ini
-                    </p>
-                    <div class="flex items-baseline gap-2 mt-1">
-                        <span id="cardDoneToday" class="text-3xl font-black text-emerald-600">0</span>
-                        <span class="text-slate-500 text-xs font-semibold">Order</span>
-                    </div>
-                </div>
-                <div class="text-right border-l border-slate-200 pl-4">
-                    <p class="text-slate-400 text-[11px]">Kontribusi Hari Ini</p>
-                    <p id="cardDoneTodayShare" class="text-lg font-bold text-blue-600">0%</p>
-                </div>
-            </div>
-
-            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-slate-500 text-xs font-bold uppercase flex items-center gap-1.5">
-                        <i class="fa-solid fa-chart-line text-blue-600"></i> Rata-rata Done / Hari
-                    </p>
-                    <div class="flex items-baseline gap-2 mt-1">
-                        <span id="cardAvgDoneDaily" class="text-3xl font-black text-blue-600">0</span>
-                        <span class="text-slate-500 text-xs font-semibold">Order / Hari</span>
-                    </div>
-                </div>
-                <div class="text-right border-l border-slate-200 pl-4">
-                    <p class="text-slate-400 text-[11px]">Hari Aktif Pengerjaan</p>
-                    <p id="cardActiveDays" class="text-lg font-bold text-amber-600">0 Hari</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- GRAFIK TREN DONE HARIAN -->
-        <section class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-arrow-trend-up text-emerald-600"></i> Tren Rate Done Harian
-            </h3>
-            <div class="relative h-64 w-full">
-                <canvas id="dailyTrendChart"></canvas>
-            </div>
-        </section>
-
-        <!-- CHART & SUMMARY -->
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
-                <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-chart-pie text-blue-600"></i> Distribusi Status Delivery
-                </h3>
-                <div class="relative h-64 flex justify-center items-center">
-                    <canvas id="statusChart"></canvas>
-                </div>
-            </div>
-
-            <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
-                <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-layer-group text-blue-600"></i> Informasi Layanan
-                </h3>
-                <div class="space-y-4 my-auto">
-                    <div>
-                        <div class="flex justify-between text-sm font-semibold mb-1">
-                            <span class="text-slate-700">HSI (High Speed Internet)</span>
-                            <span id="hsiCount" class="text-blue-600">- Order</span>
-                        </div>
-                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                            <div id="hsiBar" class="bg-blue-600 h-full transition-all duration-500" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex justify-between text-sm font-semibold mb-1">
-                            <span class="text-slate-700">IP TRANSIT</span>
-                            <span id="ipTransitCount" class="text-emerald-600">- Order</span>
-                        </div>
-                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                            <div id="ipTransitBar" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 mt-4">
-                    <p class="text-xs text-slate-500 leading-relaxed" id="lastUpdated">
-                        <i class="fa-solid fa-clock text-blue-600 mr-1"></i> Memuat waktu sinkronisasi...
-                    </p>
                 </div>
             </div>
         </section>
 
     </main>
 
+    <!-- JavaScript Auto Sync & Logic -->
     <script>
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbx6FSNsqr-DlLtJtUHqlFkzAgll1K0hIdQn1KaOOZvGfSXp-sfePcOiATpj2rfFINkG/exec';
+        const targetDateStr = "2026-10-31T23:59:59";
+        
+        // Link CSV Publik Google Sheet Anda
+        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTrV7eelhQ0JC46_w5SI9Z-c4dPIEQ2igYEieWNVhZTQT_etrxoXvcEbHEUNEO6pauenoON8CsXwTRf/pub?output=csv";
 
-        let myChart = null;
-        let trendChart = null;
+        let doneChartInstance = null;
 
-        // --- TIMER LOGIC ---
-        let targetDeadline = localStorage.getItem('hsi_deadline') 
-            ? new Date(localStorage.getItem('hsi_deadline')) 
-            : new Date('2026-10-31T23:59:59');
+        // Data Fallback jika koneksi terbatas
+        let dataPerLayanan = [
+            { layanan: "HSI", total: 274, inputOrder: 267, jt: 5, ogp: 1, done: 1, icon: "fa-wifi" },
+            { layanan: "WIFI", total: 30, inputOrder: 30, jt: 0, ogp: 0, done: 0, icon: "fa-signal" },
+            { layanan: "IP TRANSIT", total: 1, inputOrder: 1, jt: 0, ogp: 0, done: 0, icon: "fa-network-wired" }
+        ];
 
-        function updateTimer() {
-            const now = new Date().getTime();
-            const distance = targetDeadline.getTime() - now;
+        function loadGoogleSheetData() {
+            document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...';
+            document.getElementById('sync-status').className = 'bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-semibold';
 
-            if (distance < 0) {
-                document.getElementById('timerDays').innerText = "00";
-                document.getElementById('timerHours').innerText = "00";
-                document.getElementById('timerMinutes').innerText = "00";
-                document.getElementById('timerSeconds').innerText = "00";
-                document.getElementById('deadlineDisplay').innerText = "WAKTU HABIS!";
-                return;
-            }
-
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            document.getElementById('timerDays').innerText = String(days).padStart(2, '0');
-            document.getElementById('timerHours').innerText = String(hours).padStart(2, '0');
-            document.getElementById('timerMinutes').innerText = String(minutes).padStart(2, '0');
-            document.getElementById('timerSeconds').innerText = String(seconds).padStart(2, '0');
-
-            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            document.getElementById('deadlineDisplay').innerText = targetDeadline.toLocaleDateString('id-ID', options) + " WIB";
-        }
-
-        function changeDeadline() {
-            const input = prompt("Masukkan tanggal & waktu target baru (Format YYYY-MM-DDTHH:MM)", targetDeadline.toISOString().slice(0, 16));
-            if (input) {
-                const newDate = new Date(input);
-                if (!isNaN(newDate.getTime())) {
-                    targetDeadline = newDate;
-                    localStorage.setItem('hsi_deadline', newDate.toISOString());
-                    updateTimer();
-                } else {
-                    alert("Format tanggal tidak valid!");
-                }
-            }
-        }
-        setInterval(updateTimer, 1000);
-
-        // --- DOUGHNUT CHART LOGIC ---
-        function initChart(done, ogp, jt, input) {
-            const ctx = document.getElementById('statusChart').getContext('2d');
-            if (myChart) myChart.destroy();
-
-            myChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['DONE', 'OGP', 'JT', 'INPUT ORDER'],
-                    datasets: [{
-                        data: [done, ogp, jt, input],
-                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#94a3b8'],
-                        borderWidth: 0,
-                        hoverOffset: 6
-                    }]
+            Papa.parse(csvUrl, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    if(results.data && results.data.length > 0) {
+                        parseCSVToMetrics(results.data);
+                        document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-circle-check"></i> Live Synced';
+                        document.getElementById('sync-status').className = 'bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-semibold';
+                    } else {
+                        renderDashboard();
+                    }
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { color: '#475569', font: { weight: '600' } } }
-                    },
-                    cutout: '70%'
+                error: function() {
+                    renderDashboard();
+                    document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-clock"></i> Standalone Mode';
+                    document.getElementById('sync-status').className = 'bg-slate-200 text-slate-700 text-xs px-2 py-0.5 rounded-full font-semibold';
                 }
             });
         }
 
-        // --- LINE CHART LOGIC ---
-        function initDailyTrendChart(labels, dataValues) {
-            const ctx = document.getElementById('dailyTrendChart').getContext('2d');
-            if (trendChart) trendChart.destroy();
+        function parseCSVToMetrics(rows) {
+            let hsi = { layanan: "HSI", total: 0, inputOrder: 0, jt: 0, ogp: 0, done: 0, icon: "fa-wifi" };
+            let wifi = { layanan: "WIFI", total: 0, inputOrder: 0, jt: 0, ogp: 0, done: 0, icon: "fa-signal" };
+            let ipTransit = { layanan: "IP TRANSIT", total: 0, inputOrder: 0, jt: 0, ogp: 0, done: 0, icon: "fa-network-wired" };
 
-            trendChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Order DONE',
-                        data: dataValues,
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        pointBackgroundColor: '#10b981',
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { ticks: { color: '#64748b' }, grid: { color: '#f1f5f9' } },
-                        y: { ticks: { color: '#64748b', precision: 0 }, grid: { color: '#f1f5f9' }, beginAtZero: true }
-                    },
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
+            rows.forEach(r => {
+                const lay = (r["LAYANAN "] || r["LAYANAN"] || "HSI").toUpperCase();
+                const st = (r["STATUS DELIVERY"] || "").toUpperCase();
+
+                let targetSvc = hsi;
+                if(lay.includes("WIFI") || lay.includes("WMS")) targetSvc = wifi;
+                else if(lay.includes("IP") || lay.includes("TRANSIT")) targetSvc = ipTransit;
+
+                targetSvc.total++;
+
+                if(st.includes("JT") || st.includes("JANJI")) targetSvc.jt++;
+                else if(st.includes("OGP")) targetSvc.ogp++;
+                else if(st.includes("DONE") || st.includes("COMPLETED")) targetSvc.done++;
+                else targetSvc.inputOrder++;
             });
+
+            dataPerLayanan = [hsi, wifi, ipTransit];
+            renderDashboard();
         }
 
-        function parseFormattedDateKey(val) {
-            if (!val) return null;
-            if (val instanceof Date) {
-                const y = val.getFullYear();
-                const m = String(val.getMonth() + 1).padStart(2, '0');
-                const d = String(val.getDate()).padStart(2, '0');
-                return `${y}-${m}-${d}`;
-            }
+        function renderDashboard() {
+            const totalMetrics = dataPerLayanan.reduce((acc, curr) => {
+                acc.totalOrder += curr.total;
+                acc.inputOrder += curr.inputOrder;
+                acc.jt += curr.jt;
+                acc.ogp += curr.ogp;
+                acc.doneTotal += curr.done;
+                return acc;
+            }, { totalOrder: 0, inputOrder: 0, jt: 0, ogp: 0, doneTotal: 0 });
 
-            const strVal = val.toString().trim();
-            if (!strVal) return null;
+            // Card Values
+            document.getElementById('total-order').innerText = totalMetrics.totalOrder;
+            document.getElementById('input-order').innerText = totalMetrics.inputOrder;
+            document.getElementById('jt-order').innerText = totalMetrics.jt;
+            document.getElementById('ogp-order').innerText = totalMetrics.ogp;
+            document.getElementById('done-total').innerText = totalMetrics.doneTotal;
 
-            if (/^\d{4}-\d{2}-\d{2}/.test(strVal)) {
-                return strVal.substring(0, 10);
-            }
-
-            const parts = strVal.split(/[\/\.-]/);
-            if (parts.length >= 3) {
-                let p1 = parseInt(parts[0], 10);
-                let p2 = parseInt(parts[1], 10);
-                let p3 = parseInt(parts[2], 10);
-
-                if (!isNaN(p1) && !isNaN(p2) && !isNaN(p3)) {
-                    if (p1 > 1000) return `${p1}-${String(p2).padStart(2, '0')}-${String(p3).padStart(2, '0')}`;
-                    if (p3 > 1000) return `${p3}-${String(p2).padStart(2, '0')}-${String(p1).padStart(2, '0')}`;
-                }
-            }
-
-            const nativeDate = new Date(strVal);
-            if (!isNaN(nativeDate.getTime())) {
-                const y = nativeDate.getFullYear();
-                const m = String(nativeDate.getMonth() + 1).padStart(2, '0');
-                const d = String(nativeDate.getDate()).padStart(2, '0');
-                return `${y}-${m}-${d}`;
-            }
-
-            return null;
-        }
-
-        // --- FETCH REAL-TIME DATA & CONCERN ---
-        async function fetchDataFromSheet() {
-            try {
-                const response = await fetch(webAppUrl + '?_t=' + new Date().getTime());
-                const rawData = await response.json();
-
-                let rows = rawData;
-                let concerns = [];
-
-                // Jika Apps Script mengembalikan objek { rows, concerns }
-                if (!Array.isArray(rawData) && rawData.rows) {
-                    rows = rawData.rows;
-                    concerns = rawData.concerns || [];
-                }
-
-                // PROCESS CONCERN DATA (Kolom M dan N)
-                renderConcerns(concerns, rows);
-
-                if (!rows || rows.length <= 1) return;
-
-                const header = rows[0].map(h => (h || '').toString().trim().toUpperCase());
-                const colNo = header.findIndex(h => h === 'NO' || h === 'NO.');
-                const colLayanan = header.findIndex(h => h.includes('LAYANAN'));
-                const colStatus = header.findIndex(h => h.includes('STATUS'));
-                const colDate = header.findIndex(h => h.includes('TGL CLOSE') || h.includes('TGL DONE') || h.includes('TANGGAL') || h.includes('TGL'));
-
-                let total = 0;
-                let done = 0, ogp = 0, jt = 0, input = 0;
-                let hsi = 0, ipTransit = 0;
-
-                const dailyDoneMap = {};
-                const nowObj = new Date();
-                const todayStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth() + 1).padStart(2, '0')}-${String(nowObj.getDate()).padStart(2, '0')}`;
-                let todayDoneCount = 0;
-
-                for (let i = 1; i < rows.length; i++) {
-                    const row = rows[i];
-                    const noVal = colNo !== -1 ? row[colNo] : row[0];
-                    const layananVal = (colLayanan !== -1 ? row[colLayanan] : row[2] || '').toString().trim().toUpperCase();
-                    const statusVal = (colStatus !== -1 ? row[colStatus] : row[5] || '').toString().trim().toUpperCase();
-                    const dateVal = colDate !== -1 ? row[colDate] : null;
-
-                    if (noVal !== null && noVal !== '' && !isNaN(parseInt(noVal))) {
-                        total++;
-
-                        if (statusVal.includes('DONE')) {
-                            done++;
-                            let dateKey = parseFormattedDateKey(dateVal) || todayStr;
-                            dailyDoneMap[dateKey] = (dailyDoneMap[dateKey] || 0) + 1;
-                            if (dateKey === todayStr) todayDoneCount++;
-                        }
-                        else if (statusVal.includes('OGP')) ogp++;
-                        else if (statusVal.includes('JT')) jt++;
-                        else input++;
-
-                        if (layananVal.includes('IP TRANSIT')) ipTransit++;
-                        else hsi++;
-                    }
-                }
-
-                // Update UI Metrics
-                document.getElementById('cardTotal').innerText = total;
-                document.getElementById('cardInput').innerText = input;
-                document.getElementById('cardJT').innerText = jt;
-                document.getElementById('cardOGP').innerText = ogp;
-                document.getElementById('cardDone').innerText = done;
-
-                document.getElementById('cardDoneToday').innerText = todayDoneCount;
-                const todayShare = done ? ((todayDoneCount / done) * 100).toFixed(1) : 0;
-                document.getElementById('cardDoneTodayShare').innerText = `${todayShare}% dari Done`;
-
-                const sortedDates = Object.keys(dailyDoneMap).sort();
-                const activeDays = sortedDates.length || 1;
-                const avgDone = (done / activeDays).toFixed(1);
-
-                document.getElementById('cardAvgDoneDaily').innerText = avgDone;
-                document.getElementById('cardActiveDays').innerText = `${activeDays} Hari`;
-
-                let chartLabels = [];
-                let chartValues = [];
-                if (sortedDates.length > 0) {
-                    chartLabels = sortedDates.map(d => {
-                        const parts = d.split('-');
-                        return `${parts[2]}/${parts[1]}`;
-                    });
-                    chartValues = sortedDates.map(d => dailyDoneMap[d]);
-                } else {
-                    chartLabels = [todayStr.split('-').reverse().slice(0,2).join('/')];
-                    chartValues = [todayDoneCount];
-                }
-                initDailyTrendChart(chartLabels, chartValues);
-
-                document.getElementById('hsiCount').innerText = `${hsi} Order`;
-                document.getElementById('ipTransitCount').innerText = `${ipTransit} Order`;
-                document.getElementById('hsiBar').style.width = total ? `${(hsi / total) * 100}%` : '0%';
-                document.getElementById('ipTransitBar').style.width = total ? `${(ipTransit / total) * 100}%` : '0%';
-
-                const percentage = total ? ((done / total) * 100).toFixed(1) : 0;
-                const maxPositionPercent = 88;
-                const targetLeft = Math.max(2, Math.min(maxPositionPercent, (percentage / 100) * maxPositionPercent));
-
-                document.getElementById('runner').style.left = `${targetLeft}%`;
-                document.getElementById('progressPercentageText').innerText = `${percentage}%`;
-                document.getElementById('progressSubtext').innerText = `${done} dari ${total} Total Order Selesai`;
-
-                initChart(done, ogp, jt, input);
-
-                document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
-                document.getElementById('statusText').innerText = "Real-time Live Sync Active";
-
-                const now = new Date();
-                document.getElementById('lastUpdated').innerHTML = `<i class="fa-solid fa-clock text-blue-600 mr-1"></i> Terakhir Diperbarui: ${now.toLocaleTimeString('id-ID')} WIB`;
-
-            } catch (err) {
-                console.error("Gagal menarik data via Web App:", err);
-                document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-red-500";
-                document.getElementById('statusText').innerText = "Koneksi Google Sheets Gagal";
-            }
-        }
-
-        // --- RENDER TABEL CONCERN (Kolom M & N, Baris 2-4) ---
-        function renderConcerns(concerns, rows) {
-            const tbody = document.getElementById('concernTableBody');
+            // Table Render
+            const tbody = document.getElementById('table-layanan-body');
             tbody.innerHTML = '';
-
-            let list = concerns;
-
-            // Fallback: Jika Apps Script lama mengembalikan array biasa, ambil langsung dari baris index 1-3 kolom M (12) dan N (13)
-            if ((!list || list.length === 0) && rows && rows.length > 1) {
-                list = [];
-                for (let r = 1; r <= 3; r++) {
-                    if (rows[r]) {
-                        const desc = rows[r][12] || ''; // Kolom M (Index 12)
-                        const st = rows[r][13] || '';   // Kolom N (Index 13)
-                        if (desc || st) {
-                            list.push({ deskripsi: desc, status: st });
-                        }
-                    }
-                }
-            }
-
-            if (!list || list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-slate-400">Tidak ada data concern.</td></tr>`;
-                document.getElementById('concernSummaryBadge').className = "bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1 rounded-full";
-                document.getElementById('concernSummaryBadge').innerText = "Semua Lancar";
-                return;
-            }
-
-            let ongoingCount = 0;
-
-            list.forEach((item, index) => {
-                const descText = item.deskripsi || '-';
-                const statusText = (item.status || 'ONGOING').toString().trim().toUpperCase();
-                const isDone = statusText === 'DONE' || statusText === 'SELESAI';
-
-                if (!isDone) ongoingCount++;
-
-                const statusBadge = isDone 
-                    ? `<span class="bg-emerald-100 text-emerald-700 text-xs font-black px-3 py-1 rounded-full inline-flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> DONE</span>`
-                    : `<span class="bg-amber-100 text-amber-700 text-xs font-black px-3 py-1 rounded-full inline-flex items-center gap-1"><i class="fa-solid fa-clock"></i> ONGOING</span>`;
-
+            dataPerLayanan.forEach(item => {
+                const percent = item.total > 0 ? ((item.done / item.total) * 100).toFixed(1) : "0.0";
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition";
                 tr.innerHTML = `
-                    <td class="py-3 px-4 font-bold text-slate-400">${index + 1}</td>
-                    <td class="py-3 px-4 font-medium text-slate-800">${descText}</td>
-                    <td class="py-3 px-4 text-center">${statusBadge}</td>
+                    <td class="py-3 px-4 font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid ${item.icon} text-sky-600"></i> ${item.layanan}
+                    </td>
+                    <td class="py-3 px-4 text-center font-extrabold">${item.total}</td>
+                    <td class="py-3 px-4 text-center text-sky-600 font-bold">${item.inputOrder}</td>
+                    <td class="py-3 px-4 text-center text-amber-600 font-bold">${item.jt}</td>
+                    <td class="py-3 px-4 text-center text-purple-600 font-bold">${item.ogp}</td>
+                    <td class="py-3 px-4 text-center text-emerald-600 font-black">${item.done}</td>
+                    <td class="py-3 px-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <div class="w-16 bg-slate-200 rounded-full h-2 overflow-hidden">
+                                <div class="bg-emerald-500 h-2 rounded-full" style="width: ${percent}%"></div>
+                            </div>
+                            <span class="text-xs font-bold text-slate-700">${percent}%</span>
+                        </div>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            const summaryBadge = document.getElementById('concernSummaryBadge');
-            if (ongoingCount > 0) {
-                summaryBadge.className = "bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full animate-pulse";
-                summaryBadge.innerText = `${ongoingCount} Concern Ongoing`;
-            } else {
-                summaryBadge.className = "bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full";
-                summaryBadge.innerText = "Semua Concern DONE";
-            }
+            // Race Track Progress
+            const donePercentage = totalMetrics.totalOrder > 0 
+                ? ((totalMetrics.doneTotal / totalMetrics.totalOrder) * 100).toFixed(1) 
+                : 0;
+                
+            document.getElementById('progress-percent-text').innerText = donePercentage + '%';
+            document.getElementById('progress-detail-text').innerText = `Selesai (${totalMetrics.doneTotal} / ${totalMetrics.totalOrder} Order)`;
+            
+            setTimeout(() => {
+                const bike = document.getElementById('bike-runner');
+                const position = Math.max(2, Math.min(parseFloat(donePercentage) * 0.88, 88));
+                bike.style.left = position + '%';
+            }, 300);
+
+            updateTargetCountdown(totalMetrics.totalOrder, totalMetrics.doneTotal);
+            renderChart(totalMetrics.doneTotal);
         }
 
-        window.addEventListener('load', () => {
-            updateTimer();
-            fetchDataFromSheet();
-            setInterval(fetchDataFromSheet, 10000);
-        });
+        // Countdown & Rate Harian Needed
+        function updateTargetCountdown(total = 305, done = 1) {
+            const now = new Date();
+            const target = new Date(targetDateStr);
+            const diffTime = target - now;
+
+            if (diffTime <= 0) {
+                document.getElementById('countdown').innerText = "Target Telah Berakhir";
+                document.getElementById('daily-rate-needed').innerText = "0 Order / Hari";
+                return;
+            }
+
+            const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+
+            document.getElementById('countdown').innerText = `${days} Hari ${hours} Jam ${minutes} Mnt tersisa`;
+
+            const remainingOrders = total - done;
+            const dailyRateNeeded = days > 0 ? (remainingOrders / days).toFixed(2) : remainingOrders;
+            document.getElementById('daily-rate-needed').innerText = `${dailyRateNeeded} Order / Hari`;
+        }
+
+        // Render Grafik
+        function renderChart(doneCount) {
+            const ctx = document.getElementById('doneDailyChart').getContext('2d');
+            if (doneChartInstance) {
+                doneChartInstance.destroy();
+            }
+            doneChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['30 Sep', '01 Okt', '02 Okt', '03 Okt', '04 Okt', '05 Okt', '06 Okt'],
+                    datasets: [{
+                        label: 'Jumlah DONE',
+                        data: [0, 0, 0, 0, 0, 0, doneCount],
+                        backgroundColor: '#10b981',
+                        borderRadius: 6,
+                        barThickness: 18
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1, color: '#64748b', font: { size: 10 } },
+                            grid: { color: '#e2e8f0' }
+                        },
+                        x: {
+                            ticks: { color: '#64748b', font: { size: 10 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Auto Sync setiap 5 menit
+        loadGoogleSheetData();
+        setInterval(loadGoogleSheetData, 300000);
     </script>
 </body>
 </html>
