@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Delivery Project Diskominfo Kota Probolinggo</title>
+    <title>Dashboard Delivery Project Diskominfo kota Probolinggo</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -34,7 +34,7 @@
             </div>
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold text-red-600 flex items-center gap-2">
-                    Dashboard Delivery Project Probolinggo
+                    Dashboard Delivery Project Diskominfo kota Probolinggo
                 </h1>
                 <div class="flex flex-wrap items-center gap-3 mt-1">
                     <p class="text-slate-500 text-sm">Sumber Data: Google Spreadsheet (HSI PROBOLINGGO)</p>
@@ -308,13 +308,11 @@
                     countFound++;
                     let targetSvc = hsiCctv;
                     
-                    // Pencocokan Nama Layanan Baru & Variasi Lama
                     if(lay.includes("PUBLIK") || lay.includes("WIFI") || lay.includes("WMS")) {
                         targetSvc = hsiPublik;
                     } else if(lay.includes("IP") || lay.includes("TRANSIT")) {
                         targetSvc = ipTransit;
                     } else {
-                        // Default mencakup HSI, HSI CCTV, CCTV
                         targetSvc = hsiCctv;
                     }
 
