@@ -30,7 +30,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen p-4 md:p-8 font-sans">
 
-    <!-- Header dengan Logo Telkom -->
+    <!-- Header dengan Logo Telkom (Tema Cerah) -->
     <header class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center border-b border-slate-200 pb-5 gap-4">
         <div class="flex items-center gap-4">
             <div class="bg-white p-2.5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center">
@@ -109,7 +109,7 @@
             </div>
         </section>
 
-        <!-- KELOLA DATA CONCERN -->
+        <!-- KELOLA DATA CONCERN (KOLOM M - N) -->
         <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -147,4 +147,48 @@
             </div>
 
             <div class="relative w-full bg-slate-50 rounded-xl h-28 border border-slate-200 p-3 flex items-center overflow-hidden">
-                <div class="absolute inset-x-0 bottom-4 border-b-2 border-dashed border-slate
+                <div class="absolute inset-x-0 bottom-4 border-b-2 border-dashed border-slate-300"></div>
+
+                <div id="runner" 
+                     class="absolute bottom-6 transition-all duration-1000 ease-out flex flex-col items-center"
+                     style="left: 2%;">
+                    <div class="bg-red-600 text-white font-bold text-xs px-2.5 py-0.5 rounded-full shadow-md mb-1 whitespace-nowrap">
+                        Telkom Probolinggo
+                    </div>
+                    <div class="running-animation text-3xl text-red-600 drop-shadow-md">
+                        <i class="fa-solid fa-person-running"></i>
+                    </div>
+                </div>
+
+                <div class="absolute right-6 bottom-3 flex flex-col items-center justify-end h-20">
+                    <div class="flag-wave text-4xl text-slate-800 drop-shadow-sm mb-1">
+                        <i class="fa-solid fa-flag-checkered"></i>
+                    </div>
+                    <div class="w-1.5 h-12 bg-slate-400 rounded-full shadow-sm"></div>
+                </div>
+            </div>
+
+            <div class="mt-4 flex justify-between text-xs text-slate-500 font-medium">
+                <span>Start</span>
+                <span id="progressSubtext">Memuat Data...</span>
+                <span>Finish Line (Target) 31 Oktober 2026</span>
+            </div>
+        </section>
+
+        <!-- CARDS METRIC UTAMA -->
+        <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                <p class="text-slate-500 text-xs font-bold uppercase">Total Order</p>
+                <p id="cardTotal" class="text-3xl font-black text-slate-900 mt-1">-</p>
+            </div>
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm border-l-4 border-l-slate-400">
+                <p class="text-slate-500 text-xs font-bold uppercase">Input Order</p>
+                <p id="cardInput" class="text-3xl font-black text-slate-600 mt-1">-</p>
+            </div>
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm border-l-4 border-l-amber-500">
+                <p class="text-slate-500 text-xs font-bold uppercase">JT</p>
+                <p id="cardJT" class="text-3xl font-black text-amber-600 mt-1">-</p>
+            </div>
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm border-l-4 border-l-blue-500">
+                <p class="text-slate-500 text-xs font-bold uppercase">OGP</p>
+                <p id="cardOGP" class="text-3xl font-black text-blue-600 mt
