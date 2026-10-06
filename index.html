@@ -28,34 +28,34 @@
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
+<body class="bg-slate-100 text-slate-800 min-h-screen p-4 md:p-8 font-sans">
 
-    <!-- Header dengan Logo Telkom -->
-    <header class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center border-b border-slate-700 pb-5 gap-4">
+    <!-- Header Tema Cerah dengan Logo Telkom -->
+    <header class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center border-b border-slate-200 pb-5 gap-4">
         <div class="flex items-center gap-4">
-            <div class="bg-white px-3 py-2 rounded-xl shadow-md border border-slate-700 flex items-center justify-center">
+            <div class="bg-white px-3.5 py-2.5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center">
                 <img src="logo.png" 
                      alt="Telkom Indonesia" 
                      class="h-10 md:h-12 w-auto object-contain"
                      onerror="this.src='https://images.seeklogo.com/logo-png/38/2/telkom-indonesia-logo-png_seeklogo-384351.png'">
             </div>
             <div>
-                <h1 class="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
                     Dashboard HSI Probolinggo
                 </h1>
-                <p class="text-slate-400 text-sm mt-1 flex items-center gap-2">
+                <p class="text-slate-500 text-sm mt-0.5 flex items-center gap-2 font-medium">
                     <span id="statusIndicator" class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
                     <span id="statusText">Menghubungkan ke Google Sheets...</span>
                 </p>
             </div>
         </div>
         <div class="flex items-center gap-3">
-            <button onclick="fetchDataFromSheet()" class="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-2 rounded-lg transition flex items-center gap-1.5 shadow">
-                <i class="fa-solid fa-rotate"></i> Refresh Manual
+            <button onclick="fetchDataFromSheet()" class="bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-3.5 py-2.5 rounded-xl transition border border-slate-200 shadow-sm flex items-center gap-2">
+                <i class="fa-solid fa-rotate text-red-600"></i> Refresh Manual
             </button>
             <a href="https://docs.google.com/spreadsheets/d/1ixpWhHd5Vhwu89hAIMZkeHOjmXrHhCGuRz-HRlvbo9M/edit?usp=sharing" 
                target="_blank" 
-               class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-lg transition duration-200 shadow-lg flex items-center gap-2 text-sm">
+               class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2.5 rounded-xl transition duration-200 shadow-md flex items-center gap-2 text-sm">
                 <i class="fa-solid fa-file-excel"></i> Buka Spreadsheet
             </a>
         </div>
@@ -64,45 +64,45 @@
     <main class="max-w-7xl mx-auto space-y-6">
 
         <!-- BANNER HITUNG MUNDUR -->
-        <section class="bg-slate-800/90 border border-amber-500/30 rounded-2xl p-5 shadow-xl relative overflow-hidden backdrop-blur-sm">
+        <section class="bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-2xl p-5 shadow-lg relative overflow-hidden">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl">
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-2xl shadow-inner">
                         <i class="fa-solid fa-hourglass-half animate-spin" style="animation-duration: 8s;"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+                        <h2 class="text-lg font-bold flex items-center gap-2">
                             Peringatan Batas Waktu Target
                         </h2>
-                        <p class="text-xs text-slate-400 mt-0.5">
-                            Batas Akhir: <span id="deadlineDisplay" class="font-semibold text-amber-300">31 Oktober 2026, 23:59 WIB</span>
+                        <p class="text-xs text-rose-100 mt-0.5">
+                            Batas Akhir: <span id="deadlineDisplay" class="font-semibold text-yellow-300">31 Oktober 2026, 23:59 WIB</span>
                         </p>
                     </div>
                 </div>
 
                 <!-- Digit Timer Display -->
                 <div class="flex items-center gap-2 md:gap-3 text-center">
-                    <div class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 min-w-[60px]">
-                        <span id="timerDays" class="text-2xl md:text-3xl font-black text-cyan-400">00</span>
-                        <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Hari</p>
+                    <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2 min-w-[60px]">
+                        <span id="timerDays" class="text-2xl md:text-3xl font-black text-white">00</span>
+                        <p class="text-[10px] text-rose-100 uppercase tracking-wider font-bold">Hari</p>
                     </div>
-                    <span class="text-2xl font-bold text-slate-500">:</span>
-                    <div class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 min-w-[60px]">
-                        <span id="timerHours" class="text-2xl md:text-3xl font-black text-cyan-400">00</span>
-                        <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Jam</p>
+                    <span class="text-2xl font-bold text-white/80">:</span>
+                    <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2 min-w-[60px]">
+                        <span id="timerHours" class="text-2xl md:text-3xl font-black text-white">00</span>
+                        <p class="text-[10px] text-rose-100 uppercase tracking-wider font-bold">Jam</p>
                     </div>
-                    <span class="text-2xl font-bold text-slate-500">:</span>
-                    <div class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 min-w-[60px]">
-                        <span id="timerMinutes" class="text-2xl md:text-3xl font-black text-cyan-400">00</span>
-                        <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Menit</p>
+                    <span class="text-2xl font-bold text-white/80">:</span>
+                    <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2 min-w-[60px]">
+                        <span id="timerMinutes" class="text-2xl md:text-3xl font-black text-white">00</span>
+                        <p class="text-[10px] text-rose-100 uppercase tracking-wider font-bold">Menit</p>
                     </div>
-                    <span class="text-2xl font-bold text-slate-500">:</span>
-                    <div class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 min-w-[60px]">
-                        <span id="timerSeconds" class="text-2xl md:text-3xl font-black text-amber-400">00</span>
-                        <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Detik</p>
+                    <span class="text-2xl font-bold text-white/80">:</span>
+                    <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2 min-w-[60px]">
+                        <span id="timerSeconds" class="text-2xl md:text-3xl font-black text-yellow-300">00</span>
+                        <p class="text-[10px] text-rose-100 uppercase tracking-wider font-bold">Detik</p>
                     </div>
 
-                    <button onclick="changeDeadline()" class="ml-2 bg-slate-700/80 hover:bg-slate-600 text-slate-300 hover:text-white p-2.5 rounded-xl transition text-xs flex items-center gap-1" title="Ubah Batas Waktu">
+                    <button onclick="changeDeadline()" class="ml-2 bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-xl transition text-xs flex items-center gap-1" title="Ubah Batas Waktu">
                         <i class="fa-solid fa-pen-to-square"></i>
                     </button>
                 </div>
@@ -110,37 +110,37 @@
         </section>
 
         <!-- ANIMASI PROGRES RUNNER -->
-        <section class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-slate-200 flex items-center gap-2">
-                    <i class="fa-solid fa-flag-checkered text-cyan-400"></i> Race to Finish Line (Progres Target DONE)
+                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-flag-checkered text-red-600"></i> Race to Finish Line (Progres Target DONE)
                 </h2>
-                <span id="progressPercentageText" class="text-2xl font-black text-cyan-400">0%</span>
+                <span id="progressPercentageText" class="text-2xl font-black text-red-600">0%</span>
             </div>
 
-            <div class="relative w-full bg-slate-900 rounded-xl h-28 border border-slate-700 p-3 flex items-center overflow-hidden">
-                <div class="absolute inset-x-0 bottom-4 border-b-2 border-dashed border-slate-600"></div>
+            <div class="relative w-full bg-slate-50 rounded-xl h-28 border border-slate-200 p-3 flex items-center overflow-hidden">
+                <div class="absolute inset-x-0 bottom-4 border-b-2 border-dashed border-slate-300"></div>
 
                 <div id="runner" 
                      class="absolute bottom-6 transition-all duration-1000 ease-out flex flex-col items-center"
                      style="left: 2%;">
-                    <div class="bg-cyan-500 text-slate-900 font-bold text-xs px-2 py-0.5 rounded-full shadow-md mb-1 whitespace-nowrap">
+                    <div class="bg-red-600 text-white font-bold text-xs px-2.5 py-0.5 rounded-full shadow-md mb-1 whitespace-nowrap">
                         Telkom Probolinggo
                     </div>
-                    <div class="running-animation text-3xl text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]">
+                    <div class="running-animation text-3xl text-red-600 drop-shadow-sm">
                         <i class="fa-solid fa-person-running"></i>
                     </div>
                 </div>
 
                 <div class="absolute right-6 bottom-3 flex flex-col items-center justify-end h-20">
-                    <div class="flag-wave text-4xl text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] mb-1">
+                    <div class="flag-wave text-4xl text-slate-800 mb-1">
                         <i class="fa-solid fa-flag-checkered"></i>
                     </div>
-                    <div class="w-1.5 h-12 bg-gradient-to-t from-slate-400 to-slate-100 rounded-full shadow-md"></div>
+                    <div class="w-1.5 h-12 bg-slate-400 rounded-full shadow-sm"></div>
                 </div>
             </div>
 
-            <div class="mt-4 flex justify-between text-xs text-slate-400 font-medium">
+            <div class="mt-4 flex justify-between text-xs text-slate-500 font-semibold">
                 <span>Start</span>
                 <span id="progressSubtext">Memuat Data...</span>
                 <span>Finish Line (Target) 31 Oktober 2026</span>
@@ -149,67 +149,77 @@
 
         <!-- CARDS METRIC UTAMA -->
         <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md">
-                <p class="text-slate-400 text-xs font-semibold uppercase">Total Order</p>
-                <p id="cardTotal" class="text-3xl font-extrabold text-white mt-1">-</p>
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                <p class="text-slate-500 text-xs font-bold uppercase">Total Order</p>
+                <p id="cardTotal" class="text-3xl font-extrabold text-slate-900 mt-1">-</p>
             </div>
-            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-slate-500">
-                <p class="text-slate-400 text-xs font-semibold uppercase">Input Order</p>
-                <p id="cardInput" class="text-3xl font-extrabold text-slate-300 mt-1">-</p>
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm border-l-4 border-l-slate-400">
+                <p class="text-slate-500 text-xs font-bold uppercase">Input Order</p>
+                <p id="cardInput" class="text-3xl font-extrabold text-slate-700 mt-1">-</p>
             </div>
-            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-amber-500">
-                <p class="text-slate-400 text-xs font-semibold uppercase">JT</p>
-                <p id="cardJT" class="text-3xl font-extrabold text-amber-400 mt-1">-</p>
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm border-l-4 border-l-amber-500">
+                <p class="text-amber-600 text-xs font-bold uppercase">JT</p>
+                <p id="cardJT" class="text-3xl font-extrabold text-amber-500 mt-1">-</p>
             </div>
-            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-blue-500">
-                <p class="text-slate-400 text-xs font-semibold uppercase">OGP</p>
-                <p id="cardOGP" class="text-3xl font-extrabold text-blue-400 mt-1">-</p>
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm border-l-4 border-l-blue-500">
+                <p class="text-blue-600 text-xs font-bold uppercase">OGP</p>
+                <p id="cardOGP" class="text-3xl font-extrabold text-blue-600 mt-1">-</p>
             </div>
-            <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-emerald-500 col-span-2 md:col-span-1">
-                <p class="text-slate-400 text-xs font-semibold uppercase">Done Total</p>
-                <p id="cardDone" class="text-3xl font-extrabold text-emerald-400 mt-1">-</p>
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm border-l-4 border-l-emerald-500 col-span-2 md:col-span-1">
+                <p class="text-emerald-600 text-xs font-bold uppercase">Done Total</p>
+                <p id="cardDone" class="text-3xl font-extrabold text-emerald-600 mt-1">-</p>
             </div>
         </section>
 
         <!-- KARTU RATE DONE HARIAN & PERFORMA -->
         <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-slate-800/90 border border-emerald-500/30 p-5 rounded-xl shadow-lg flex items-center justify-between">
+            <div class="bg-white border border-emerald-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
                 <div>
-                    <p class="text-slate-400 text-xs font-semibold uppercase flex items-center gap-1.5">
-                        <i class="fa-solid fa-calendar-day text-emerald-400"></i> Done Hari Ini
+                    <p class="text-slate-500 text-xs font-bold uppercase flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar-day text-emerald-600"></i> Done Hari Ini
                     </p>
                     <div class="flex items-baseline gap-2 mt-1">
-                        <span id="cardDoneToday" class="text-3xl font-extrabold text-emerald-400">0</span>
-                        <span class="text-slate-400 text-xs">Order</span>
+                        <span id="cardDoneToday" class="text-3xl font-extrabold text-emerald-600">0</span>
+                        <span class="text-slate-500 text-xs font-medium">Order</span>
                     </div>
                 </div>
-                <div class="text-right border-l border-slate-700 pl-4">
-                    <p class="text-slate-400 text-[11px]">Kontribusi Hari Ini</p>
-                    <p id="cardDoneTodayShare" class="text-lg font-bold text-cyan-400">0%</p>
+                <div class="text-right border-l border-slate-200 pl-4">
+                    <p class="text-slate-400 text-[11px] font-medium">Kontribusi Hari Ini</p>
+                    <p id="cardDoneTodayShare" class="text-lg font-extrabold text-red-600">0%</p>
                 </div>
             </div>
 
-            <div class="bg-slate-800/90 border border-cyan-500/30 p-5 rounded-xl shadow-lg flex items-center justify-between">
+            <div class="bg-white border border-blue-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
                 <div>
-                    <p class="text-slate-400 text-xs font-semibold uppercase flex items-center gap-1.5">
-                        <i class="fa-solid fa-chart-line text-cyan-400"></i> Rata-rata Done / Hari
+                    <p class="text-slate-500 text-xs font-bold uppercase flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-line text-blue-600"></i> Rata-rata Done / Hari
                     </p>
                     <div class="flex items-baseline gap-2 mt-1">
-                        <span id="cardAvgDoneDaily" class="text-3xl font-extrabold text-cyan-400">0</span>
-                        <span class="text-slate-400 text-xs">Order / Hari</span>
+                        <span id="cardAvgDoneDaily" class="text-3xl font-extrabold text-blue-600">0</span>
+                        <span class="text-slate-500 text-xs font-medium">Order / Hari</span>
                     </div>
                 </div>
-                <div class="text-right border-l border-slate-700 pl-4">
-                    <p class="text-slate-400 text-[11px]">Hari Aktif Pengerjaan</p>
-                    <p id="cardActiveDays" class="text-lg font-bold text-amber-400">0 Hari</p>
+                <div class="text-right border-l border-slate-200 pl-4">
+                    <p class="text-slate-400 text-[11px] font-medium">Hari Aktif Pengerjaan</p>
+                    <p id="cardActiveDays" class="text-lg font-extrabold text-amber-500">0 Hari</p>
                 </div>
             </div>
         </section>
 
+        <!-- SECTION BARU: CONCERN & CATATAN KHUSUS (BARIS 279 - 281) -->
+        <section class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+            <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Concern & Catatan Khusus
+            </h3>
+            <div id="concernContainer" class="space-y-3">
+                <p class="text-slate-400 text-sm">Memuat daftar concern...</p>
+            </div>
+        </section>
+
         <!-- GRAFIK TREN DONE HARIAN -->
-        <section class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-lg">
-            <h3 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-arrow-trend-up text-emerald-400"></i> Tren Rate Done Harian
+        <section class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+            <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-arrow-trend-up text-red-600"></i> Tren Rate Done Harian
             </h3>
             <div class="relative h-64 w-full">
                 <canvas id="dailyTrendChart"></canvas>
@@ -218,42 +228,42 @@
 
         <!-- CHART & SUMMARY -->
         <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-lg flex flex-col justify-between">
-                <h3 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-chart-pie text-cyan-400"></i> Distribusi Status Delivery
+            <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-red-600"></i> Distribusi Status Delivery
                 </h3>
                 <div class="relative h-64 flex justify-center items-center">
                     <canvas id="statusChart"></canvas>
                 </div>
             </div>
 
-            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-lg flex flex-col justify-between">
-                <h3 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-layer-group text-cyan-400"></i> Informasi Layanan
+            <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-red-600"></i> Informasi Layanan
                 </h3>
                 <div class="space-y-4 my-auto">
                     <div>
-                        <div class="flex justify-between text-sm font-semibold mb-1">
-                            <span class="text-slate-300">HSI (High Speed Internet)</span>
-                            <span id="hsiCount" class="text-cyan-400">- Order</span>
+                        <div class="flex justify-between text-sm font-bold mb-1">
+                            <span class="text-slate-700">HSI (High Speed Internet)</span>
+                            <span id="hsiCount" class="text-red-600">- Order</span>
                         </div>
-                        <div class="w-full bg-slate-700 h-3 rounded-full overflow-hidden">
-                            <div id="hsiBar" class="bg-cyan-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden border border-slate-200">
+                            <div id="hsiBar" class="bg-red-600 h-full transition-all duration-500" style="width: 0%"></div>
                         </div>
                     </div>
                     <div>
-                        <div class="flex justify-between text-sm font-semibold mb-1">
-                            <span class="text-slate-300">IP TRANSIT</span>
-                            <span id="ipTransitCount" class="text-emerald-400">- Order</span>
+                        <div class="flex justify-between text-sm font-bold mb-1">
+                            <span class="text-slate-700">IP TRANSIT</span>
+                            <span id="ipTransitCount" class="text-emerald-600">- Order</span>
                         </div>
-                        <div class="w-full bg-slate-700 h-3 rounded-full overflow-hidden">
+                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden border border-slate-200">
                             <div id="ipTransitBar" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
-                <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-700/50 mt-4">
-                    <p class="text-xs text-slate-400 leading-relaxed" id="lastUpdated">
-                        <i class="fa-solid fa-clock text-cyan-400 mr-1"></i> Memuat waktu sinkronisasi...
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 mt-4">
+                    <p class="text-xs text-slate-500 font-medium leading-relaxed" id="lastUpdated">
+                        <i class="fa-solid fa-clock text-red-600 mr-1"></i> Memuat waktu sinkronisasi...
                     </p>
                 </div>
             </div>
@@ -325,7 +335,7 @@
                     labels: ['DONE', 'OGP', 'JT', 'INPUT ORDER'],
                     datasets: [{
                         data: [done, ogp, jt, input],
-                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#64748b'],
+                        backgroundColor: ['#10b981', '#2563eb', '#f59e0b', '#64748b'],
                         borderWidth: 0,
                         hoverOffset: 6
                     }]
@@ -334,7 +344,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+                        legend: { position: 'bottom', labels: { color: '#334155', font: { weight: 'bold' } } }
                     },
                     cutout: '70%'
                 }
@@ -353,11 +363,11 @@
                     datasets: [{
                         label: 'Order DONE',
                         data: dataValues,
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                        borderColor: '#dc2626',
+                        backgroundColor: 'rgba(220, 38, 38, 0.1)',
                         fill: true,
                         tension: 0.3,
-                        pointBackgroundColor: '#10b981',
+                        pointBackgroundColor: '#dc2626',
                         pointRadius: 4,
                         pointHoverRadius: 6
                     }]
@@ -366,8 +376,8 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-                        y: { ticks: { color: '#94a3b8', precision: 0 }, grid: { color: '#334155' }, beginAtZero: true }
+                        x: { ticks: { color: '#475569', font: { weight: '600' } }, grid: { color: '#f1f5f9' } },
+                        y: { ticks: { color: '#475569', precision: 0 }, grid: { color: '#f1f5f9' }, beginAtZero: true }
                     },
                     plugins: {
                         legend: { display: false }
@@ -376,7 +386,7 @@
             });
         }
 
-        // Helper Ekstraksi Tanggal Lokal yang Presisi
+        // Helper Ekstraksi Tanggal
         function parseFormattedDateKey(val) {
             if (!val) return null;
             if (val instanceof Date) {
@@ -389,12 +399,8 @@
             const strVal = val.toString().trim();
             if (!strVal) return null;
 
-            // Jika format YYYY-MM-DD
-            if (/^\d{4}-\d{2}-\d{2}/.test(strVal)) {
-                return strVal.substring(0, 10);
-            }
+            if (/^\d{4}-\d{2}-\d{2}/.test(strVal)) return strVal.substring(0, 10);
 
-            // Jika format DD/MM/YYYY atau DD-MM-YYYY
             const parts = strVal.split(/[\/\.-]/);
             if (parts.length >= 3) {
                 let p1 = parseInt(parts[0], 10);
@@ -402,14 +408,8 @@
                 let p3 = parseInt(parts[2], 10);
 
                 if (!isNaN(p1) && !isNaN(p2) && !isNaN(p3)) {
-                    // Jika part pertama adalah tahun (YYYY/MM/DD)
-                    if (p1 > 1000) {
-                        return `${p1}-${String(p2).padStart(2, '0')}-${String(p3).padStart(2, '0')}`;
-                    }
-                    // Jika part ketiga adalah tahun (DD/MM/YYYY)
-                    if (p3 > 1000) {
-                        return `${p3}-${String(p2).padStart(2, '0')}-${String(p1).padStart(2, '0')}`;
-                    }
+                    if (p1 > 1000) return `${p1}-${String(p2).padStart(2, '0')}-${String(p3).padStart(2, '0')}`;
+                    if (p3 > 1000) return `${p3}-${String(p2).padStart(2, '0')}-${String(p1).padStart(2, '0')}`;
                 }
             }
 
@@ -424,7 +424,7 @@
             return null;
         }
 
-        // --- FETCH REAL-TIME DATA ---
+        // --- FETCH REAL-TIME DATA & CONCERN (BARIS 279 - 281) ---
         async function fetchDataFromSheet() {
             try {
                 const response = await fetch(webAppUrl + '?_t=' + new Date().getTime());
@@ -443,11 +443,11 @@
                 let hsi = 0, ipTransit = 0;
 
                 const dailyDoneMap = {};
-
-                // Ambil Tanggal Hari Ini Sesuai Jam Lokal (YYYY-MM-DD)
                 const nowObj = new Date();
                 const todayStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth() + 1).padStart(2, '0')}-${String(nowObj.getDate()).padStart(2, '0')}`;
                 let todayDoneCount = 0;
+
+                const concernItems = [];
 
                 for (let i = 1; i < rows.length; i++) {
                     const row = rows[i];
@@ -456,23 +456,15 @@
                     const statusVal = (colStatus !== -1 ? row[colStatus] : row[5] || '').toString().trim().toUpperCase();
                     const dateVal = colDate !== -1 ? row[colDate] : null;
 
+                    // 1. Deteksi Order Utama (memiliki nomor urut)
                     if (noVal !== null && noVal !== '' && !isNaN(parseInt(noVal))) {
                         total++;
 
                         if (statusVal.includes('DONE')) {
                             done++;
-
-                            let dateKey = parseFormattedDateKey(dateVal);
-                            // Apabila kolom tanggal belum diisi tapi status sudah DONE, otomatis asumsikan dikerjakan hari ini
-                            if (!dateKey) {
-                                dateKey = todayStr;
-                            }
-
+                            let dateKey = parseFormattedDateKey(dateVal) || todayStr;
                             dailyDoneMap[dateKey] = (dailyDoneMap[dateKey] || 0) + 1;
-
-                            if (dateKey === todayStr) {
-                                todayDoneCount++;
-                            }
+                            if (dateKey === todayStr) todayDoneCount++;
                         }
                         else if (statusVal.includes('OGP')) ogp++;
                         else if (statusVal.includes('JT')) jt++;
@@ -480,7 +472,50 @@
 
                         if (layananVal.includes('IP TRANSIT')) ipTransit++;
                         else hsi++;
+                    } 
+                    // 2. Deteksi Concern / Catatan Khusus di Baris Bawah (misal Baris 279-281)
+                    else {
+                        const rowText = row.join(' ').trim();
+                        if (rowText.length > 3) {
+                            let itemStatus = 'ONGOING';
+                            if (statusVal.includes('DONE') || rowText.toUpperCase().includes('DONE')) {
+                                itemStatus = 'DONE';
+                            }
+
+                            // Filter baris yang relevan sebagai concern
+                            if (rowText.toUpperCase().includes('CONCERN') || rowText.toUpperCase().includes('KENDALA') || rowText.toUpperCase().includes('CATATAN') || rowText.toUpperCase().includes('NOTE') || i >= 275) {
+                                concernItems.push({
+                                    text: rowText,
+                                    status: itemStatus,
+                                    line: i + 1
+                                });
+                            }
+                        }
                     }
+                }
+
+                // Render Section Concern
+                const concernContainer = document.getElementById('concernContainer');
+                if (concernItems.length > 0) {
+                    concernContainer.innerHTML = concernItems.map(item => {
+                        const isDone = item.status === 'DONE';
+                        const badgeBg = isDone ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : 'bg-amber-100 text-amber-800 border-amber-300';
+                        const badgeIcon = isDone ? 'fa-circle-check' : 'fa-clock';
+
+                        return `
+                            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-0.5 text-slate-400 font-bold text-xs">#${item.line}</div>
+                                    <p class="text-sm font-semibold text-slate-700 leading-snug">${item.text}</p>
+                                </div>
+                                <span class="px-3 py-1 text-xs font-extrabold rounded-full border flex items-center gap-1.5 whitespace-nowrap ${badgeBg}">
+                                    <i class="fa-solid ${badgeIcon}"></i> ${item.status}
+                                </span>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    concernContainer.innerHTML = `<p class="text-slate-500 text-sm italic">Tidak ada catatan concern khusus saat ini.</p>`;
                 }
 
                 // Update UI Metrics Utama
@@ -539,7 +574,7 @@
                 document.getElementById('statusText').innerText = "Real-time Live Sync (Direct Apps Script)";
 
                 const now = new Date();
-                document.getElementById('lastUpdated').innerHTML = `<i class="fa-solid fa-clock text-cyan-400 mr-1"></i> Terakhir Diperbarui: ${now.toLocaleTimeString('id-ID')} WIB`;
+                document.getElementById('lastUpdated').innerHTML = `<i class="fa-solid fa-clock text-red-600 mr-1"></i> Terakhir Diperbarui: ${now.toLocaleTimeString('id-ID')} WIB`;
 
             } catch (err) {
                 console.error("Gagal menarik data via Web App:", err);
