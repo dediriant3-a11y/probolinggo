@@ -147,7 +147,7 @@
             </div>
         </section>
 
-        <!-- CARDS METRIC -->
+        <!-- CARDS METRIC UTAMA -->
         <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md">
                 <p class="text-slate-400 text-xs font-semibold uppercase">Total Order</p>
@@ -166,8 +166,53 @@
                 <p id="cardOGP" class="text-3xl font-extrabold text-blue-400 mt-1">-</p>
             </div>
             <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md border-l-4 border-l-emerald-500 col-span-2 md:col-span-1">
-                <p class="text-slate-400 text-xs font-semibold uppercase">Done</p>
+                <p class="text-slate-400 text-xs font-semibold uppercase">Done Total</p>
                 <p id="cardDone" class="text-3xl font-extrabold text-emerald-400 mt-1">-</p>
+            </div>
+        </section>
+
+        <!-- KARTU RATE DONE HARIAN & PERFORMA -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-slate-800/90 border border-emerald-500/30 p-5 rounded-xl shadow-lg flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-xs font-semibold uppercase flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar-day text-emerald-400"></i> Done Hari Ini
+                    </p>
+                    <div class="flex items-baseline gap-2 mt-1">
+                        <span id="cardDoneToday" class="text-3xl font-extrabold text-emerald-400">0</span>
+                        <span class="text-slate-400 text-xs">Order</span>
+                    </div>
+                </div>
+                <div class="text-right border-l border-slate-700 pl-4">
+                    <p class="text-slate-400 text-[11px]">Kontribusi Hari Ini</p>
+                    <p id="cardDoneTodayShare" class="text-lg font-bold text-cyan-400">0%</p>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/90 border border-cyan-500/30 p-5 rounded-xl shadow-lg flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-xs font-semibold uppercase flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-line text-cyan-400"></i> Rata-rata Done / Hari
+                    </p>
+                    <div class="flex items-baseline gap-2 mt-1">
+                        <span id="cardAvgDoneDaily" class="text-3xl font-extrabold text-cyan-400">0</span>
+                        <span class="text-slate-400 text-xs">Order / Hari</span>
+                    </div>
+                </div>
+                <div class="text-right border-l border-slate-700 pl-4">
+                    <p class="text-slate-400 text-[11px]">Hari Aktif Pengerjaan</p>
+                    <p id="cardActiveDays" class="text-lg font-bold text-amber-400">0 Hari</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- GRAFIK TREN DONE HARIAN -->
+        <section class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-lg">
+            <h3 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-arrow-trend-up text-emerald-400"></i> Tren Rate Done Harian
+            </h3>
+            <div class="relative h-64 w-full">
+                <canvas id="dailyTrendChart"></canvas>
             </div>
         </section>
 
@@ -217,10 +262,10 @@
     </main>
 
     <script>
-        // URL GOOGLE APPS SCRIPT WEB APP
         const webAppUrl = 'https://script.google.com/macros/s/AKfycbx6FSNsqr-DlLtJtUHqlFkzAgll1K0hIdQn1KaOOZvGfSXp-sfePcOiATpj2rfFINkG/exec';
 
         let myChart = null;
+        let trendChart = null;
 
         // --- TIMER LOGIC ---
         let targetDeadline = localStorage.getItem('hsi_deadline') 
@@ -269,7 +314,7 @@
         }
         setInterval(updateTimer, 1000);
 
-        // --- CHART LOGIC ---
+        // --- DOUGHNUT CHART LOGIC ---
         function initChart(done, ogp, jt, input) {
             const ctx = document.getElementById('statusChart').getContext('2d');
             if (myChart) myChart.destroy();
@@ -296,37 +341,106 @@
             });
         }
 
-        // --- FETCH REAL-TIME DIRECT MEMORY DATA ---
+        // --- LINE CHART TREN HARIAN LOGIC ---
+        function initDailyTrendChart(labels, dataValues) {
+            const ctx = document.getElementById('dailyTrendChart').getContext('2d');
+            if (trendChart) trendChart.destroy();
+
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Order DONE',
+                        data: dataValues,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#10b981',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                        y: { ticks: { color: '#94a3b8', precision: 0 }, grid: { color: '#334155' }, beginAtZero: true }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Helper untuk Parsing Tanggal
+        function parseDateString(str) {
+            if (!str) return null;
+            if (str instanceof Date) return str;
+            const strVal = str.toString().trim();
+            const d = new Date(strVal);
+            if (!isNaN(d.getTime())) return d;
+
+            // Handle dd/mm/yyyy
+            const parts = strVal.split(/[\/\.-]/);
+            if (parts.length === 3) {
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1;
+                const year = parseInt(parts[2], 10);
+                if (year > 2000) return new Date(year, month, day);
+            }
+            return null;
+        }
+
+        // --- FETCH REAL-TIME DATA ---
         async function fetchDataFromSheet() {
             try {
-                // Fetch direct via Apps Script API
                 const response = await fetch(webAppUrl + '?_t=' + new Date().getTime());
                 const rows = await response.json();
 
                 if (!rows || rows.length <= 1) return;
 
-                // Identifikasi Indeks Kolom dari Header (Baris 0)
                 const header = rows[0].map(h => (h || '').toString().trim().toUpperCase());
                 const colNo = header.findIndex(h => h === 'NO' || h === 'NO.');
                 const colLayanan = header.findIndex(h => h.includes('LAYANAN'));
                 const colStatus = header.findIndex(h => h.includes('STATUS'));
+                const colDate = header.findIndex(h => h.includes('TGL CLOSE') || h.includes('TGL DONE') || h.includes('TANGGAL') || h.includes('TGL'));
 
                 let total = 0;
                 let done = 0, ogp = 0, jt = 0, input = 0;
                 let hsi = 0, ipTransit = 0;
 
-                // Proses Baris Data (Mulai Baris 1)
+                const dailyDoneMap = {};
+                const todayStr = new Date().toISOString().split('T')[0];
+                let todayDoneCount = 0;
+
                 for (let i = 1; i < rows.length; i++) {
                     const row = rows[i];
                     const noVal = colNo !== -1 ? row[colNo] : row[0];
                     const layananVal = (colLayanan !== -1 ? row[colLayanan] : row[2] || '').toString().trim().toUpperCase();
                     const statusVal = (colStatus !== -1 ? row[colStatus] : row[5] || '').toString().trim().toUpperCase();
+                    const dateVal = colDate !== -1 ? row[colDate] : null;
 
-                    // Validasi hanya menghitung baris ber-Nomor urut
                     if (noVal !== null && noVal !== '' && !isNaN(parseInt(noVal))) {
                         total++;
 
-                        if (statusVal.includes('DONE')) done++;
+                        if (statusVal.includes('DONE')) {
+                            done++;
+                            // Hitung Rate Harian berdasarkan tanggal
+                            if (dateVal) {
+                                const parsedDate = parseDateString(dateVal);
+                                if (parsedDate) {
+                                    const dateKey = parsedDate.toISOString().split('T')[0];
+                                    dailyDoneMap[dateKey] = (dailyDoneMap[dateKey] || 0) + 1;
+                                    if (dateKey === todayStr) {
+                                        todayDoneCount++;
+                                    }
+                                }
+                            }
+                        }
                         else if (statusVal.includes('OGP')) ogp++;
                         else if (statusVal.includes('JT')) jt++;
                         else input++;
@@ -336,19 +450,47 @@
                     }
                 }
 
-                // Update UI Metrics
+                // Update UI Metrics Utama
                 document.getElementById('cardTotal').innerText = total;
                 document.getElementById('cardInput').innerText = input;
                 document.getElementById('cardJT').innerText = jt;
                 document.getElementById('cardOGP').innerText = ogp;
                 document.getElementById('cardDone').innerText = done;
 
+                // Update Metric Harian
+                document.getElementById('cardDoneToday').innerText = todayDoneCount;
+                const todayShare = done ? ((todayDoneCount / done) * 100).toFixed(1) : 0;
+                document.getElementById('cardDoneTodayShare').innerText = `${todayShare}% dari Done`;
+
+                const sortedDates = Object.keys(dailyDoneMap).sort();
+                const activeDays = sortedDates.length || 1;
+                const avgDone = (done / activeDays).toFixed(1);
+
+                document.getElementById('cardAvgDoneDaily').innerText = avgDone;
+                document.getElementById('cardActiveDays').innerText = `${activeDays} Hari`;
+
+                // Chart Tren Harian
+                let chartLabels = [];
+                let chartValues = [];
+                if (sortedDates.length > 0) {
+                    chartLabels = sortedDates.map(d => {
+                        const parts = d.split('-');
+                        return `${parts[2]}/${parts[1]}`;
+                    });
+                    chartValues = sortedDates.map(d => dailyDoneMap[d]);
+                } else {
+                    chartLabels = ['Hari Ini'];
+                    chartValues = [todayDoneCount];
+                }
+                initDailyTrendChart(chartLabels, chartValues);
+
+                // Service Distribution
                 document.getElementById('hsiCount').innerText = `${hsi} Order`;
                 document.getElementById('ipTransitCount').innerText = `${ipTransit} Order`;
                 document.getElementById('hsiBar').style.width = total ? `${(hsi / total) * 100}%` : '0%';
                 document.getElementById('ipTransitBar').style.width = total ? `${(ipTransit / total) * 100}%` : '0%';
 
-                // Update Runner Animation
+                // Runner Progress
                 const percentage = total ? ((done / total) * 100).toFixed(1) : 0;
                 const maxPositionPercent = 88;
                 const targetLeft = Math.max(2, Math.min(maxPositionPercent, (percentage / 100) * maxPositionPercent));
@@ -357,7 +499,7 @@
                 document.getElementById('progressPercentageText').innerText = `${percentage}%`;
                 document.getElementById('progressSubtext').innerText = `${done} dari ${total} Total Order Selesai`;
 
-                // Render Chart
+                // Render Doughnut Chart
                 initChart(done, ogp, jt, input);
 
                 document.getElementById('statusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
@@ -376,7 +518,7 @@
         window.addEventListener('load', () => {
             updateTimer();
             fetchDataFromSheet();
-            setInterval(fetchDataFromSheet, 10000); // Auto-refresh setiap 10 detik
+            setInterval(fetchDataFromSheet, 10000);
         });
     </script>
 </body>
