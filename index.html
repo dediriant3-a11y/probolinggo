@@ -254,8 +254,8 @@
         // Ambil data dari LocalStorage jika ada (Mencegah Fluktuasi Data)
         let savedData = localStorage.getItem('probolinggo_dashboard_data');
         let dataPerLayanan = savedData ? JSON.parse(savedData) : [
-            { layanan: "HSI", total: 274, inputOrder: 267, jt: 5, ogp: 1, done: 1, icon: "fa-wifi" },
-            { layanan: "WIFI", total: 30, inputOrder: 30, jt: 0, ogp: 0, done: 0, icon: "fa-signal" },
+            { layanan: "HSI CCTV", total: 274, inputOrder: 267, jt: 5, ogp: 1, done: 1, icon: "fa-wifi" },
+            { layanan: "HSI (PUBLIK)", total: 30, inputOrder: 30, jt: 0, ogp: 0, done: 0, icon: "fa-signal" },
             { layanan: "IP TRANSIT", total: 1, inputOrder: 1, jt: 0, ogp: 0, done: 0, icon: "fa-network-wired" }
         ];
 
@@ -288,14 +288,13 @@
         }
 
         function parseCSVToMetrics(rows) {
-            let hsi = { layanan: "HSI", total: 0, inputOrder: 0, jt: 0, ogp: 0, done: 0, icon: "fa-wifi" };
-            let wifi = { layanan: "WIFI", total: 0, inputOrder: 0, jt: 0, ogp: 0, done: 0, icon: "fa-signal" };
+            let hsiCctv = { layanan: "HSI CCTV", total: 0, inputOrder: 0, jt: 0, ogp: 0, done: 0, icon: "fa-wifi" };
+            let hsiPublik = { layanan: "HSI (PUBLIK)", total: 0, inputOrder: 0, jt: 0, ogp: 0, done: 0, icon: "fa-signal" };
             let ipTransit = { layanan: "IP TRANSIT", total: 0, inputOrder: 0, jt: 0, ogp: 0, done: 0, icon: "fa-network-wired" };
 
             let countFound = 0;
 
             rows.forEach(r => {
-                // Pencarian Kunci Fleksibel (Abaikan spasi/huruf besar-kecil)
                 let lay = "";
                 let st = "";
 
@@ -307,9 +306,17 @@
 
                 if (lay || st) {
                     countFound++;
-                    let targetSvc = hsi;
-                    if(lay.includes("WIFI") || lay.includes("WMS")) targetSvc = wifi;
-                    else if(lay.includes("IP") || lay.includes("TRANSIT")) targetSvc = ipTransit;
+                    let targetSvc = hsiCctv;
+                    
+                    // Pencocokan Nama Layanan Baru & Variasi Lama
+                    if(lay.includes("PUBLIK") || lay.includes("WIFI") || lay.includes("WMS")) {
+                        targetSvc = hsiPublik;
+                    } else if(lay.includes("IP") || lay.includes("TRANSIT")) {
+                        targetSvc = ipTransit;
+                    } else {
+                        // Default mencakup HSI, HSI CCTV, CCTV
+                        targetSvc = hsiCctv;
+                    }
 
                     targetSvc.total++;
 
@@ -320,9 +327,8 @@
                 }
             });
 
-            // Hanya simpan & update jika data valid ditemukan
             if (countFound > 0) {
-                dataPerLayanan = [hsi, wifi, ipTransit];
+                dataPerLayanan = [hsiCctv, hsiPublik, ipTransit];
                 localStorage.setItem('probolinggo_dashboard_data', JSON.stringify(dataPerLayanan));
             }
             renderDashboard();
@@ -446,9 +452,7 @@
             });
         }
 
-        // Render data lokal terlebih dahulu agar responsif
         renderDashboard();
-        // Kemudian load sync data Google Sheets terbaru
         loadGoogleSheetData();
         setInterval(loadGoogleSheetData, 180000);
     </script>
