@@ -376,22 +376,51 @@
             });
         }
 
-        // Helper untuk Parsing Tanggal
-        function parseDateString(str) {
-            if (!str) return null;
-            if (str instanceof Date) return str;
-            const strVal = str.toString().trim();
-            const d = new Date(strVal);
-            if (!isNaN(d.getTime())) return d;
-
-            // Handle dd/mm/yyyy
-            const parts = strVal.split(/[\/\.-]/);
-            if (parts.length === 3) {
-                const day = parseInt(parts[0], 10);
-                const month = parseInt(parts[1], 10) - 1;
-                const year = parseInt(parts[2], 10);
-                if (year > 2000) return new Date(year, month, day);
+        // Helper Ekstraksi Tanggal Lokal yang Presisi
+        function parseFormattedDateKey(val) {
+            if (!val) return null;
+            if (val instanceof Date) {
+                const y = val.getFullYear();
+                const m = String(val.getMonth() + 1).padStart(2, '0');
+                const d = String(val.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
             }
+
+            const strVal = val.toString().trim();
+            if (!strVal) return null;
+
+            // Jika format YYYY-MM-DD
+            if (/^\d{4}-\d{2}-\d{2}/.test(strVal)) {
+                return strVal.substring(0, 10);
+            }
+
+            // Jika format DD/MM/YYYY atau DD-MM-YYYY
+            const parts = strVal.split(/[\/\.-]/);
+            if (parts.length >= 3) {
+                let p1 = parseInt(parts[0], 10);
+                let p2 = parseInt(parts[1], 10);
+                let p3 = parseInt(parts[2], 10);
+
+                if (!isNaN(p1) && !isNaN(p2) && !isNaN(p3)) {
+                    // Jika part pertama adalah tahun (YYYY/MM/DD)
+                    if (p1 > 1000) {
+                        return `${p1}-${String(p2).padStart(2, '0')}-${String(p3).padStart(2, '0')}`;
+                    }
+                    // Jika part ketiga adalah tahun (DD/MM/YYYY)
+                    if (p3 > 1000) {
+                        return `${p3}-${String(p2).padStart(2, '0')}-${String(p1).padStart(2, '0')}`;
+                    }
+                }
+            }
+
+            const nativeDate = new Date(strVal);
+            if (!isNaN(nativeDate.getTime())) {
+                const y = nativeDate.getFullYear();
+                const m = String(nativeDate.getMonth() + 1).padStart(2, '0');
+                const d = String(nativeDate.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            }
+
             return null;
         }
 
@@ -414,7 +443,10 @@
                 let hsi = 0, ipTransit = 0;
 
                 const dailyDoneMap = {};
-                const todayStr = new Date().toISOString().split('T')[0];
+
+                // Ambil Tanggal Hari Ini Sesuai Jam Lokal (YYYY-MM-DD)
+                const nowObj = new Date();
+                const todayStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth() + 1).padStart(2, '0')}-${String(nowObj.getDate()).padStart(2, '0')}`;
                 let todayDoneCount = 0;
 
                 for (let i = 1; i < rows.length; i++) {
@@ -429,16 +461,17 @@
 
                         if (statusVal.includes('DONE')) {
                             done++;
-                            // Hitung Rate Harian berdasarkan tanggal
-                            if (dateVal) {
-                                const parsedDate = parseDateString(dateVal);
-                                if (parsedDate) {
-                                    const dateKey = parsedDate.toISOString().split('T')[0];
-                                    dailyDoneMap[dateKey] = (dailyDoneMap[dateKey] || 0) + 1;
-                                    if (dateKey === todayStr) {
-                                        todayDoneCount++;
-                                    }
-                                }
+
+                            let dateKey = parseFormattedDateKey(dateVal);
+                            // Apabila kolom tanggal belum diisi tapi status sudah DONE, otomatis asumsikan dikerjakan hari ini
+                            if (!dateKey) {
+                                dateKey = todayStr;
+                            }
+
+                            dailyDoneMap[dateKey] = (dailyDoneMap[dateKey] || 0) + 1;
+
+                            if (dateKey === todayStr) {
+                                todayDoneCount++;
                             }
                         }
                         else if (statusVal.includes('OGP')) ogp++;
@@ -479,7 +512,7 @@
                     });
                     chartValues = sortedDates.map(d => dailyDoneMap[d]);
                 } else {
-                    chartLabels = ['Hari Ini'];
+                    chartLabels = [todayStr.split('-').reverse().slice(0,2).join('/')];
                     chartValues = [todayDoneCount];
                 }
                 initDailyTrendChart(chartLabels, chartValues);
