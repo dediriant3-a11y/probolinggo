@@ -25,21 +25,31 @@
 <body class="bg-slate-100 text-slate-800 min-h-screen p-4 md:p-8 font-sans">
 
     <!-- Header & Peringatan Target -->
-    <header class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-slate-200 pb-4 gap-4 bg-white p-6 rounded-2xl shadow-sm">
-        <div>
-            <h1 class="text-2xl md:text-3xl font-bold text-red-600 flex items-center gap-2">
-                <i class="fa-solid fa-chart-line"></i> Dashboard Delivery Project Probolinggo
-            </h1>
-            <p class="text-slate-500 text-sm mt-1 flex items-center gap-2">
-                <span>Sumber Data: Google Spreadsheet (HSI PROBOLINGGO)</span>
-                <span id="sync-status" class="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-semibold">
-                    <i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...
-                </span>
-            </p>
+    <header class="flex flex-col lg:flex-row justify-between items-center mb-8 border-b border-slate-200 pb-4 gap-4 bg-white p-6 rounded-2xl shadow-sm">
+        <div class="flex items-center gap-4">
+            <!-- Logo Telkom -->
+            <div class="flex-shrink-0 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                <img src="logo.png" alt="Logo Telkom" class="h-12 w-auto object-contain" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\"fa-solid fa-building text-red-600 text-3xl p-2\"></i>';">
+            </div>
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-red-600 flex items-center gap-2">
+                    Dashboard Delivery Project Probolinggo
+                </h1>
+                <div class="flex flex-wrap items-center gap-3 mt-1">
+                    <p class="text-slate-500 text-sm">Sumber Data: Google Spreadsheet (HSI PROBOLINGGO)</p>
+                    <span id="sync-status" class="bg-amber-100 text-amber-700 text-xs px-2.5 py-0.5 rounded-full font-semibold">
+                        <i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...
+                    </span>
+                    <!-- Tombol Menuju GDoc -->
+                    <a href="https://docs.google.com/spreadsheets/d/1ixpWhHd5Vhwu89hAIMZkeHOjmXrHhCGuRz-HRlvbo9M/edit#gid=0" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1 rounded-lg font-semibold transition shadow-sm">
+                        <i class="fa-solid fa-file-excel"></i> Buka Google Sheet
+                    </a>
+                </div>
+            </div>
         </div>
         
         <!-- Peringatan Batas Waktu Target -->
-        <div class="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-4 shadow-sm">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-4 shadow-sm w-full lg:w-auto justify-between lg:justify-start">
             <div class="bg-red-100 text-red-600 p-3 rounded-lg text-2xl">
                 <i class="fa-solid fa-hourglass-half"></i>
             </div>
@@ -224,7 +234,7 @@
 
         let doneChartInstance = null;
 
-        // Fallback Default yang Sudah Konsisten
+        // Fallback Default
         let dataPerLayanan = [
             { layanan: "HSI", total: 274, inputOrder: 267, jt: 5, ogp: 1, done: 1, icon: "fa-wifi" },
             { layanan: "WIFI", total: 30, inputOrder: 30, jt: 0, ogp: 0, done: 0, icon: "fa-signal" },
@@ -233,9 +243,8 @@
 
         function loadGoogleSheetData() {
             document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...';
-            document.getElementById('sync-status').className = 'bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-semibold';
+            document.getElementById('sync-status').className = 'bg-amber-100 text-amber-700 text-xs px-2.5 py-0.5 rounded-full font-semibold';
 
-            // Menambahkan Cache-Buster agar selalu ambil data ter-update
             const freshCsvUrl = baseCsvUrl + "&_nocache=" + new Date().getTime();
 
             Papa.parse(freshCsvUrl, {
@@ -246,7 +255,7 @@
                     if(results.data && results.data.length > 0) {
                         parseCSVToMetrics(results.data);
                         document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-circle-check"></i> Live Synced';
-                        document.getElementById('sync-status').className = 'bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-semibold';
+                        document.getElementById('sync-status').className = 'bg-emerald-100 text-emerald-700 text-xs px-2.5 py-0.5 rounded-full font-semibold';
                     } else {
                         renderDashboard();
                     }
@@ -254,7 +263,7 @@
                 error: function() {
                     renderDashboard();
                     document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-clock"></i> Standby';
-                    document.getElementById('sync-status').className = 'bg-slate-200 text-slate-700 text-xs px-2 py-0.5 rounded-full font-semibold';
+                    document.getElementById('sync-status').className = 'bg-slate-200 text-slate-700 text-xs px-2.5 py-0.5 rounded-full font-semibold';
                 }
             });
         }
@@ -285,7 +294,6 @@
                 }
             });
 
-            // Hanya overwrite jika parsed rows terbukti valid
             if (countFound > 0) {
                 dataPerLayanan = [hsi, wifi, ipTransit];
             }
@@ -411,7 +419,7 @@
         }
 
         loadGoogleSheetData();
-        setInterval(loadGoogleSheetData, 180000); // Sync tiap 3 menit
+        setInterval(loadGoogleSheetData, 180000);
     </script>
 </body>
 </html>
