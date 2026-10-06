@@ -30,7 +30,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen p-4 md:p-8 font-sans">
 
-    <!-- Header dengan Logo Telkom (Tema Cerah) -->
+    <!-- Header dengan Logo Telkom -->
     <header class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center border-b border-slate-200 pb-5 gap-4">
         <div class="flex items-center gap-4">
             <div class="bg-white p-2.5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center">
@@ -87,4 +87,64 @@
                         <p class="text-[10px] text-rose-200 uppercase tracking-wider font-semibold">Hari</p>
                     </div>
                     <span class="text-2xl font-bold text-white/60">:</span>
-                    <div class="bg-white/10 border border-white/20 backdrop-blur-md rounded-xl px-
+                    <div class="bg-white/10 border border-white/20 backdrop-blur-md rounded-xl px-3 py-2 min-w-[60px]">
+                        <span id="timerHours" class="text-2xl md:text-3xl font-black text-white">00</span>
+                        <p class="text-[10px] text-rose-200 uppercase tracking-wider font-semibold">Jam</p>
+                    </div>
+                    <span class="text-2xl font-bold text-white/60">:</span>
+                    <div class="bg-white/10 border border-white/20 backdrop-blur-md rounded-xl px-3 py-2 min-w-[60px]">
+                        <span id="timerMinutes" class="text-2xl md:text-3xl font-black text-white">00</span>
+                        <p class="text-[10px] text-rose-200 uppercase tracking-wider font-semibold">Menit</p>
+                    </div>
+                    <span class="text-2xl font-bold text-white/60">:</span>
+                    <div class="bg-white/10 border border-white/20 backdrop-blur-md rounded-xl px-3 py-2 min-w-[60px]">
+                        <span id="timerSeconds" class="text-2xl md:text-3xl font-black text-yellow-300">00</span>
+                        <p class="text-[10px] text-rose-200 uppercase tracking-wider font-semibold">Detik</p>
+                    </div>
+
+                    <button onclick="changeDeadline()" class="ml-2 bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-xl transition text-xs flex items-center gap-1" title="Ubah Batas Waktu">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- KELOLA DATA CONCERN -->
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Project Concern 
+                </h3>
+                <span id="concernSummaryBadge" class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">
+                    Memuat status...
+                </span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
+                            <th class="py-3 px-4 rounded-l-xl"></th>
+                            <th class="py-3 px-4">Deskripsi Concern</th>
+                            <th class="py-3 px-4 rounded-r-xl text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="concernTableBody" class="divide-y divide-slate-100">
+                        <tr>
+                            <td colspan="3" class="text-center py-4 text-slate-400 italic">Memuat data concern dari Google Sheets...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ANIMASI PROGRES RUNNER -->
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-flag-checkered text-red-600"></i> Race to Finish Line (Progres Target DONE)
+                </h2>
+                <span id="progressPercentageText" class="text-2xl font-black text-red-600">0%</span>
+            </div>
+
+            <div class="relative w-full bg-slate-50 rounded-xl h-28 border border-slate-200 p-3 flex items-center overflow-hidden">
+                <div class="absolute inset-x-0 bottom-4 border-b-2 border-dashed border-slate
