@@ -238,7 +238,7 @@
     </main>
 
     <script>
-        // Penanganan Logo Error secara Aman
+        // Logo Fallback
         const logoImg = document.getElementById('logo-img');
         const logoFallback = document.getElementById('logo-fallback');
         logoImg.onerror = function() {
@@ -251,10 +251,11 @@
 
         let doneChartInstance = null;
 
-        // Fallback Default Presisi
-        let dataPerLayanan = [
-            { layanan: "HSI", total: 274, inputOrder: 267, jt: 5, ogp: 1, done: 1, icon: "fa-signal" },
-            { layanan: "WIFI", total: 30, inputOrder: 30, jt: 0, ogp: 0, done: 0, icon: "fa-wifi" },
+        // Ambil data dari LocalStorage jika ada (Mencegah Fluktuasi Data)
+        let savedData = localStorage.getItem('probolinggo_dashboard_data');
+        let dataPerLayanan = savedData ? JSON.parse(savedData) : [
+            { layanan: "HSI", total: 274, inputOrder: 267, jt: 5, ogp: 1, done: 1, icon: "fa-wifi" },
+            { layanan: "WIFI", total: 30, inputOrder: 30, jt: 0, ogp: 0, done: 0, icon: "fa-signal" },
             { layanan: "IP TRANSIT", total: 1, inputOrder: 1, jt: 0, ogp: 0, done: 0, icon: "fa-network-wired" }
         ];
 
@@ -263,15 +264,6 @@
             syncStatus.innerHTML = '<i class="fa-solid fa-arrows-rotate animate-spin"></i> Syncing...';
             syncStatus.className = 'bg-amber-100 text-amber-700 text-xs px-2.5 py-0.5 rounded-full font-semibold';
 
-            let isCompleted = false;
-            const syncTimeout = setTimeout(() => {
-                if (!isCompleted) {
-                    renderDashboard();
-                    syncStatus.innerHTML = '<i class="fa-solid fa-clock"></i> Standby (Local)';
-                    syncStatus.className = 'bg-slate-200 text-slate-700 text-xs px-2.5 py-0.5 rounded-full font-semibold';
-                }
-            }, 4000);
-
             const freshCsvUrl = baseCsvUrl + "&_nocache=" + new Date().getTime();
 
             Papa.parse(freshCsvUrl, {
@@ -279,8 +271,6 @@
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
-                    isCompleted = true;
-                    clearTimeout(syncTimeout);
                     if(results.data && results.data.length > 0) {
                         parseCSVToMetrics(results.data);
                         syncStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i> Live Synced';
@@ -290,10 +280,8 @@
                     }
                 },
                 error: function() {
-                    isCompleted = true;
-                    clearTimeout(syncTimeout);
                     renderDashboard();
-                    syncStatus.innerHTML = '<i class="fa-solid fa-clock"></i> Standby';
+                    syncStatus.innerHTML = '<i class="fa-solid fa-clock"></i> Cached Mode';
                     syncStatus.className = 'bg-slate-200 text-slate-700 text-xs px-2.5 py-0.5 rounded-full font-semibold';
                 }
             });
@@ -307,8 +295,15 @@
             let countFound = 0;
 
             rows.forEach(r => {
-                const lay = (r["LAYANAN "] || r["LAYANAN"] || "").toUpperCase().trim();
-                const st = (r["STATUS DELIVERY"] || "").toUpperCase().trim();
+                // Pencarian Kunci Fleksibel (Abaikan spasi/huruf besar-kecil)
+                let lay = "";
+                let st = "";
+
+                Object.keys(r).forEach(k => {
+                    const keyClean = k.trim().toUpperCase();
+                    if(keyClean.includes("LAYANAN")) lay = r[k].toString().trim().toUpperCase();
+                    if(keyClean.includes("STATUS")) st = r[k].toString().trim().toUpperCase();
+                });
 
                 if (lay || st) {
                     countFound++;
@@ -325,8 +320,10 @@
                 }
             });
 
+            // Hanya simpan & update jika data valid ditemukan
             if (countFound > 0) {
                 dataPerLayanan = [hsi, wifi, ipTransit];
+                localStorage.setItem('probolinggo_dashboard_data', JSON.stringify(dataPerLayanan));
             }
             renderDashboard();
         }
@@ -449,6 +446,9 @@
             });
         }
 
+        // Render data lokal terlebih dahulu agar responsif
+        renderDashboard();
+        // Kemudian load sync data Google Sheets terbaru
         loadGoogleSheetData();
         setInterval(loadGoogleSheetData, 180000);
     </script>
