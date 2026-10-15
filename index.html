@@ -87,7 +87,7 @@
                 </div>
                 <div class="mt-4">
                     <div id="input-order" class="text-3xl font-black text-sky-600">...</div>
-                    <span class="text-xs text-slate-500">Status Menunggu Input Order</span>
+                    <span class="text-xs text-slate-500">Status Input Order</span>
                 </div>
             </div>
 
@@ -294,15 +294,25 @@
 
             let countFound = 0;
 
-            rows.forEach(r => {
-                let lay = "";
-                let st = "";
+            if (rows.length === 0) return;
 
-                Object.keys(r).forEach(k => {
-                    const keyClean = k.trim().toUpperCase();
-                    if(keyClean.includes("LAYANAN")) lay = r[k].toString().trim().toUpperCase();
-                    if(keyClean.includes("STATUS")) st = r[k].toString().trim().toUpperCase();
-                });
+            // Cari nama kolom kunci secara presisi dari baris pertama
+            const sampleRow = rows[0];
+            let keyLayanan = Object.keys(sampleRow).find(k => k.trim().toUpperCase() === "LAYANAN" || k.trim().toUpperCase().includes("LAYANAN")) || "";
+            let keyStatus = Object.keys(sampleRow).find(k => k.trim().toUpperCase() === "STATUS" || k.trim().toUpperCase().includes("STATUS")) || "";
+
+            rows.forEach(r => {
+                let lay = keyLayanan && r[keyLayanan] ? r[keyLayanan].toString().trim().toUpperCase() : "";
+                let st = keyStatus && r[keyStatus] ? r[keyStatus].toString().trim().toUpperCase() : "";
+
+                // Fallback pencarian manual jika kolom utama belum ditemukan
+                if (!keyLayanan || !keyStatus) {
+                    Object.keys(r).forEach(k => {
+                        const keyClean = k.trim().toUpperCase();
+                        if(!lay && (keyClean === "LAYANAN" || keyClean.includes("LAYANAN"))) lay = r[k].toString().trim().toUpperCase();
+                        if(!st && (keyClean === "STATUS" || keyClean.includes("STATUS"))) st = r[k].toString().trim().toUpperCase();
+                    });
+                }
 
                 if (lay || st) {
                     countFound++;
