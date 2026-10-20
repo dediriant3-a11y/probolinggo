@@ -286,11 +286,11 @@
                         syncStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i> Live Synced';
                         syncStatus.className = 'bg-emerald-100 text-emerald-700 text-xs px-2.5 py-0.5 rounded-full font-semibold';
                     } else {
-                        renderDashboard();
+                        renderDashboard({});
                     }
                 },
                 error: function() {
-                    renderDashboard();
+                    renderDashboard({});
                     syncStatus.innerHTML = '<i class="fa-solid fa-clock"></i> Cached Mode';
                     syncStatus.className = 'bg-slate-200 text-slate-700 text-xs px-2.5 py-0.5 rounded-full font-semibold';
                 }
@@ -303,6 +303,7 @@
             let ipTransit = { layanan: "IP TRANSIT", total: 0, inputOrder: 0, jt: 0, ogp: 0, done: 0, icon: "fa-network-wired" };
 
             let countFound = 0;
+            const dailyDoneMap = {};
 
             if (rows.length === 0) return;
 
@@ -310,10 +311,15 @@
             const sampleRow = rows[0];
             let keyLayanan = Object.keys(sampleRow).find(k => k.trim().toUpperCase() === "LAYANAN" || k.trim().toUpperCase().includes("LAYANAN")) || "";
             let keyStatus = Object.keys(sampleRow).find(k => k.trim().toUpperCase() === "STATUS" || k.trim().toUpperCase().includes("STATUS")) || "";
+            let keyTanggal = Object.keys(sampleRow).find(k => {
+                const u = k.trim().toUpperCase();
+                return u.includes("TGL") || u.includes("TANGGAL") || u.includes("CLOSE");
+            }) || "";
 
             rows.forEach(r => {
                 let lay = keyLayanan && r[keyLayanan] ? r[keyLayanan].toString().trim().toUpperCase() : "";
                 let st = keyStatus && r[keyStatus] ? r[keyStatus].toString().trim().toUpperCase() : "";
+                let tglRaw = keyTanggal && r[keyTanggal] ? r[keyTanggal].toString().trim() : "";
 
                 // Fallback pencarian manual jika kolom utama belum ditemukan
                 if (!keyLayanan || !keyStatus) {
@@ -340,7 +346,13 @@
 
                     if(st.includes("JT") || st.includes("JANJI")) targetSvc.jt++;
                     else if(st.includes("OGP")) targetSvc.ogp++;
-                    else if(st.includes("DONE") || st.includes("COMPLETED")) targetSvc.done++;
+                    else if(st.includes("DONE") || st.includes("COMPLETED")) {
+                        targetSvc.done++;
+                        let dateKey = parseFormattedDateKey(tglRaw);
+                        if (dateKey) {
+                            dailyDoneMap[dateKey] = (dailyDoneMap[dateKey] || 0) + 1;
+                        }
+                    }
                     else targetSvc.inputOrder++;
                 }
             });
@@ -349,10 +361,19 @@
                 dataPerLayanan = [hsiCctv, hsiPublik, ipTransit];
                 localStorage.setItem('probolinggo_dashboard_data', JSON.stringify(dataPerLayanan));
             }
-            renderDashboard();
+            renderDashboard(dailyDoneMap);
         }
 
-        function renderDashboard() {
+        function parseFormattedDateKey(val) {
+            if (!val) return null;
+            const d = new Date(val);
+            if (!isNaN(d.getTime())) {
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            }
+            return null;
+        }
+
+        function renderDashboard(dailyDoneMap = {}) {
             const totalMetrics = dataPerLayanan.reduce((acc, curr) => {
                 acc.totalOrder += curr.total;
                 acc.inputOrder += curr.inputOrder;
@@ -409,7 +430,7 @@
             }, 300);
 
             updateTargetCountdown(totalMetrics.totalOrder, totalMetrics.doneTotal);
-            renderChart(totalMetrics.doneTotal);
+            renderChart(dailyDoneMap, totalMetrics.doneTotal);
         }
 
         function updateTargetCountdown(total = 305, done = 1) {
@@ -434,18 +455,45 @@
             document.getElementById('daily-rate-needed').innerText = `${dailyRateNeeded} Order / Hari`;
         }
 
-        function renderChart(doneCount) {
+        function renderChart(dailyDoneMap, totalDone) {
             const ctx = document.getElementById('doneDailyChart').getContext('2d');
             if (doneChartInstance) {
                 doneChartInstance.destroy();
             }
+
+            const labels = [];
+            const chartData = [];
+            const today = new Date();
+
+            // Membuat 7 hari terakhir dinamis (sampai hari ini)
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(today.getDate() - i);
+
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                const keyDate = `${yyyy}-${mm}-${dd}`;
+
+                const labelStr = `${dd} ${d.toLocaleDateString('id-ID', { month: 'short' })}`;
+                labels.push(labelStr);
+
+                if (dailyDoneMap && dailyDoneMap[keyDate] !== undefined) {
+                    chartData.push(dailyDoneMap[keyDate]);
+                } else if (i === 0 && (!dailyDoneMap || Object.keys(dailyDoneMap).length === 0)) {
+                    chartData.push(totalDone);
+                } else {
+                    chartData.push(0);
+                }
+            }
+
             doneChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['30 Sep', '01 Okt', '02 Okt', '03 Okt', '04 Okt', '05 Okt', '06 Okt'],
+                    labels: labels,
                     datasets: [{
                         label: 'Jumlah DONE',
-                        data: [0, 0, 0, 0, 0, 0, doneCount],
+                        data: chartData,
                         backgroundColor: '#10b981',
                         borderRadius: 6,
                         barThickness: 18
@@ -458,7 +506,7 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            ticks: { stepSize: 1, color: '#64748b', font: { size: 10 } },
+                            ticks: { precision: 0, stepSize: 1, color: '#64748b', font: { size: 10 } },
                             grid: { color: '#e2e8f0' }
                         },
                         x: {
@@ -470,7 +518,7 @@
             });
         }
 
-        renderDashboard();
+        renderDashboard({});
         loadGoogleSheetData();
         setInterval(loadGoogleSheetData, 180000);
     </script>
