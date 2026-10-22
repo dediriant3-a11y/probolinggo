@@ -174,7 +174,7 @@
                 <div class="md:col-span-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-xs font-bold uppercase tracking-wide text-slate-700 flex items-center gap-2">
-                            <i class="fa-solid fa-chart-column text-emerald-600"></i> Grafik Tren DONE Harian
+                            <i class="fa-solid fa-chart-line text-emerald-600"></i> Grafik Tren DONE Harian (Batang & Alur)
                         </span>
                         <span class="text-xs text-slate-500 font-medium">Monitoring Real-time</span>
                     </div>
@@ -261,7 +261,7 @@
 
         let doneChartInstance = null;
 
-        // Ambil data dari LocalStorage jika ada (Mencegah Fluktuasi Data)
+        // Ambil data dari LocalStorage jika ada
         let savedData = localStorage.getItem('probolinggo_dashboard_data');
         let dataPerLayanan = savedData ? JSON.parse(savedData) : [
             { layanan: "HSI CCTV", total: 274, inputOrder: 267, jt: 5, ogp: 1, done: 1, icon: "fa-wifi" },
@@ -307,21 +307,25 @@
 
             if (rows.length === 0) return;
 
-            // Cari nama kolom kunci secara presisi dari baris pertama
             const sampleRow = rows[0];
-            let keyLayanan = Object.keys(sampleRow).find(k => k.trim().toUpperCase() === "LAYANAN" || k.trim().toUpperCase().includes("LAYANAN")) || "";
-            let keyStatus = Object.keys(sampleRow).find(k => k.trim().toUpperCase() === "STATUS" || k.trim().toUpperCase().includes("STATUS")) || "";
-            let keyTanggal = Object.keys(sampleRow).find(k => {
-                const u = k.trim().toUpperCase();
-                return u.includes("TGL") || u.includes("TANGGAL") || u.includes("CLOSE");
-            }) || "";
+            const keys = Object.keys(sampleRow);
+            
+            let keyLayanan = keys.find(k => k.trim().toUpperCase() === "LAYANAN" || k.trim().toUpperCase().includes("LAYANAN")) || "";
+            let keyStatus = keys.find(k => k.trim().toUpperCase() === "STATUS" || k.trim().toUpperCase().includes("STATUS")) || "";
+            
+            // Cari Kolom M (TGL DONE) secara presisi
+            let keyTanggal = keys.find(k => k.trim().toUpperCase() === "TGL DONE" || k.trim().toUpperCase().includes("TGL DONE")) 
+                || keys[12] 
+                || keys.find(k => {
+                    const u = k.trim().toUpperCase();
+                    return u.includes("TGL") || u.includes("TANGGAL") || u.includes("CLOSE");
+                }) || "";
 
             rows.forEach(r => {
                 let lay = keyLayanan && r[keyLayanan] ? r[keyLayanan].toString().trim().toUpperCase() : "";
                 let st = keyStatus && r[keyStatus] ? r[keyStatus].toString().trim().toUpperCase() : "";
                 let tglRaw = keyTanggal && r[keyTanggal] ? r[keyTanggal].toString().trim() : "";
 
-                // Fallback pencarian manual jika kolom utama belum ditemukan
                 if (!keyLayanan || !keyStatus) {
                     Object.keys(r).forEach(k => {
                         const keyClean = k.trim().toUpperCase();
@@ -364,11 +368,29 @@
             renderDashboard(dailyDoneMap);
         }
 
+        // Parsing Format Tanggal DD/MM/YYYY
         function parseFormattedDateKey(val) {
             if (!val) return null;
-            const d = new Date(val);
-            if (!isNaN(d.getTime())) {
-                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const str = val.toString().trim().split(' ')[0]; // Ambil bagian tanggalnya saja
+            const parts = str.split(/[\/\.-]/);
+            
+            if (parts.length === 3) {
+                let d = parseInt(parts[0], 10);
+                let m = parseInt(parts[1], 10);
+                let y = parseInt(parts[2], 10);
+                
+                if (d > 1000) { 
+                    // Format YYYY/MM/DD
+                    return `${d}-${String(m).padStart(2, '0')}-${String(y).padStart(2, '0')}`;
+                } else if (y > 1000) { 
+                    // Format DD/MM/YYYY
+                    return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                }
+            }
+            
+            const nativeDate = new Date(val);
+            if (!isNaN(nativeDate.getTime())) {
+                return `${nativeDate.getFullYear()}-${String(nativeDate.getMonth() + 1).padStart(2, '0')}-${String(nativeDate.getDate()).padStart(2, '0')}`;
             }
             return null;
         }
@@ -455,6 +477,7 @@
             document.getElementById('daily-rate-needed').innerText = `${dailyRateNeeded} Order / Hari`;
         }
 
+        // Render Grafik Kombinasi (Bar + Line Alur Naik Turun)
         function renderChart(dailyDoneMap, totalDone) {
             const ctx = document.getElementById('doneDailyChart').getContext('2d');
             if (doneChartInstance) {
@@ -465,7 +488,6 @@
             const chartData = [];
             const today = new Date();
 
-            // Membuat 7 hari terakhir dinamis (sampai hari ini)
             for (let i = 6; i >= 0; i--) {
                 const d = new Date();
                 d.setDate(today.getDate() - i);
@@ -480,24 +502,43 @@
 
                 if (dailyDoneMap && dailyDoneMap[keyDate] !== undefined) {
                     chartData.push(dailyDoneMap[keyDate]);
-                } else if (i === 0 && (!dailyDoneMap || Object.keys(dailyDoneMap).length === 0)) {
-                    chartData.push(totalDone);
                 } else {
                     chartData.push(0);
                 }
             }
 
+            // Buat Gradien Latar Belakang Garis
+            const gradient = ctx.createLinearGradient(0, 0, 0, 120);
+            gradient.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+            gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
             doneChartInstance = new Chart(ctx, {
-                type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Jumlah DONE',
-                        data: chartData,
-                        backgroundColor: '#10b981',
-                        borderRadius: 6,
-                        barThickness: 18
-                    }]
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Garis Alur Tren',
+                            data: chartData,
+                            borderColor: '#059669',
+                            borderWidth: 3,
+                            fill: true,
+                            backgroundColor: gradient,
+                            tension: 0.35,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#047857',
+                            order: 1
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Jumlah DONE',
+                            data: chartData,
+                            backgroundColor: '#10b981',
+                            borderRadius: 6,
+                            barThickness: 22,
+                            order: 2
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
